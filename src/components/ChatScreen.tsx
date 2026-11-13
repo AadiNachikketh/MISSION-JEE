@@ -58,32 +58,53 @@ const FONT_SCALE_CONFIG: Record<
 > = {
   easy: {
     label: 'Clear',
-    headingClass: 'text-[18px] sm:text-[20px] leading-snug',
-    bodyClass: 'text-[16px] leading-[1.68]',
-    userClass: 'text-[15.5px] leading-[1.6]',
-    stepNumClass: 'w-6 h-6 text-xs',
-    chipClass: 'text-xs sm:text-[13px]',
+    headingClass: 'text-[20px] sm:text-[22px] leading-snug',
+    bodyClass: 'text-[17px] leading-[1.72]',
+    userClass: 'text-[16.5px] leading-[1.65]',
+    stepNumClass: 'w-7 h-7 text-xs',
+    chipClass: 'text-[13px] sm:text-sm',
   },
   big: {
     label: 'Big',
-    headingClass: 'text-[21px] sm:text-[23px] leading-snug',
-    bodyClass: 'text-[18px] sm:text-[18.5px] leading-[1.72]',
-    userClass: 'text-[17px] leading-[1.65]',
-    stepNumClass: 'w-7 h-7 text-sm',
-    chipClass: 'text-[13px] sm:text-sm',
+    headingClass: 'text-[22px] sm:text-[25px] leading-snug',
+    bodyClass: 'text-[19px] sm:text-[19.5px] leading-[1.75]',
+    userClass: 'text-[18px] leading-[1.68]',
+    stepNumClass: 'w-8 h-8 text-sm',
+    chipClass: 'text-sm sm:text-[15px]',
   },
   xl: {
     label: 'Extra Big',
-    headingClass: 'text-[24px] sm:text-[26px] leading-snug',
-    bodyClass: 'text-[20px] sm:text-[21px] leading-[1.78]',
-    userClass: 'text-[18.5px] leading-[1.7]',
-    stepNumClass: 'w-8 h-8 text-base',
-    chipClass: 'text-sm sm:text-[15px]',
+    headingClass: 'text-[25px] sm:text-[28px] leading-snug',
+    bodyClass: 'text-[21.5px] sm:text-[22.5px] leading-[1.8]',
+    userClass: 'text-[19.5px] leading-[1.72]',
+    stepNumClass: 'w-9 h-9 text-base',
+    chipClass: 'text-[15px] sm:text-base',
   },
 };
 
+function cleanAiTextFragment(text: string): string {
+  return text
+    .replace(/1️⃣/g, '1. ')
+    .replace(/2️⃣/g, '2. ')
+    .replace(/3️⃣/g, '3. ')
+    .replace(/4️⃣/g, '4. ')
+    .replace(/5️⃣/g, '5. ')
+    .replace(/6️⃣/g, '6. ')
+    .replace(/7️⃣/g, '7. ')
+    .replace(/8️⃣/g, '8. ')
+    .replace(/9️⃣/g, '9. ')
+    .replace(/🔟/g, '10. ')
+    .replace(/(\d+\s*g)\s*P\b/g, '$1 Protein')
+    .replace(/(\d+\s*g)\s*C\b/g, '$1 Carbs')
+    .replace(/(\d+\s*g)\s*F\b/g, '$1 Fat')
+    .replace(/\u2011/g, '-')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 function renderInlineEmphasis(text: string): React.ReactNode {
-  return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((part, idx) => {
+  const cleaned = cleanAiTextFragment(text);
+  return cleaned.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((part, idx) => {
     if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
       return (
         <strong key={idx} className="font-display font-bold text-white">
@@ -93,7 +114,7 @@ function renderInlineEmphasis(text: string): React.ReactNode {
     }
     if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
       return (
-        <em key={idx} className="italic text-[#cabeff]">
+        <em key={idx} className="not-italic font-semibold text-[#cabeff]">
           {part.slice(1, -1)}
         </em>
       );
@@ -110,6 +131,176 @@ function renderInlineEmphasis(text: string): React.ReactNode {
     }
     return <React.Fragment key={idx}>{part}</React.Fragment>;
   });
+}
+
+function parseTableRow(line: string): string[] {
+  const stripped = line.replace(/^\|/, '').replace(/\|$/, '');
+  return stripped.split('|').map((cell) => cell.trim());
+}
+
+function isTableSeparatorRow(line: string): boolean {
+  const cleaned = line.replace(/\|/g, '').trim();
+  return cleaned.length > 0 && /^[\s:\-]+$/.test(cleaned);
+}
+
+function renderTableBlock(
+  tableLines: string[],
+  keyPrefix: string,
+  scale: (typeof FONT_SCALE_CONFIG)[AiFontLevel],
+  accentHex: string
+): React.ReactNode {
+  const parsedRows = tableLines
+    .filter((l) => !isTableSeparatorRow(l))
+    .map(parseTableRow)
+    .filter((cells) => cells.some((c) => c.length > 0));
+
+  if (parsedRows.length === 0) return null;
+
+  const headers = parsedRows[0];
+  const bodyRows = parsedRows.slice(1);
+
+  if (bodyRows.length === 0) {
+    return (
+      <div
+        key={keyPrefix}
+        className="rounded-xl px-4 py-3 bg-[#0A0E1F]/70 border border-[#2A3362]/70"
+      >
+        <p className={`font-display font-bold text-white ${scale.bodyClass}`}>
+          {headers.map((h) => cleanAiTextFragment(h)).join(' · ')}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div key={keyPrefix} className="space-y-3 my-1">
+      {bodyRows.map((cells, rIdx) => {
+        const primary = cleanAiTextFragment(cells[0] || '');
+        const metaParts = cells
+          .slice(1, Math.min(3, cells.length))
+          .map((c, cOffset) => ({
+            header: headers[cOffset + 1] || '',
+            value: cleanAiTextFragment(c),
+          }))
+          .filter((item) => item.value.length > 0);
+        const detailCells = cells.slice(3).filter((c) => c.trim().length > 0);
+
+        const hasLongDetail =
+          detailCells.length > 0 ||
+          cells.some((c) => /<br\s*\/?>|1️⃣|2️⃣/i.test(c));
+
+        return (
+          <div
+            key={`${keyPrefix}-row-${rIdx}`}
+            className="rounded-2xl bg-[#0A0E1F]/80 border border-[#2A3362]/85 p-4 space-y-2.5"
+          >
+            {/* Card Header Row */}
+            <div className="flex flex-wrap items-baseline justify-between gap-2 pb-2 border-b border-[#2A3362]/60">
+              <div className={`font-display font-bold text-white ${scale.headingClass}`}>
+                {renderInlineEmphasis(primary)}
+              </div>
+              {metaParts.length > 0 && !hasLongDetail && metaParts.length === 1 && (
+                <div
+                  className={`font-display font-semibold ${scale.bodyClass}`}
+                  style={{ color: accentHex }}
+                >
+                  {renderInlineEmphasis(metaParts[0].value)}
+                </div>
+              )}
+            </div>
+
+            {/* Secondary meta columns */}
+            {metaParts.length > 0 && (hasLongDetail || metaParts.length > 1) && (
+              <div className="space-y-1.5">
+                {metaParts.map((item, mIdx) => (
+                  <div
+                    key={mIdx}
+                    className={`flex flex-wrap items-baseline gap-x-2 text-[#F1F5F9] ${scale.bodyClass}`}
+                  >
+                    {item.header && (
+                      <span
+                        className="font-display font-bold text-xs sm:text-sm uppercase tracking-wider shrink-0"
+                        style={{ color: accentHex }}
+                      >
+                        {cleanAiTextFragment(item.header)}:
+                      </span>
+                    )}
+                    <span>{renderInlineEmphasis(item.value)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Expanded multi-step cell content */}
+            {detailCells.map((rawCell, dIdx) => {
+              const splitItems = rawCell
+                .replace(/<br\s*\/?>/gi, '\n')
+                .split('\n')
+                .map((s) => cleanAiTextFragment(s))
+                .filter(Boolean);
+
+              const colHeader = headers[dIdx + 3];
+
+              return (
+                <div key={dIdx} className="space-y-2 pt-1">
+                  {colHeader && (
+                    <div
+                      className="font-display font-bold text-xs sm:text-sm uppercase tracking-wider"
+                      style={{ color: accentHex }}
+                    >
+                      {cleanAiTextFragment(colHeader)}
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    {splitItems.map((itemText, sIdx) => {
+                      const numMatch = itemText.match(/^(\d+)[.)]\s+(.+)$/);
+                      if (numMatch) {
+                        return (
+                          <div
+                            key={sIdx}
+                            className="flex items-start gap-3 pl-0.5"
+                          >
+                            <span
+                              className={`shrink-0 rounded-lg font-display font-bold flex items-center justify-center mt-0.5 ${scale.stepNumClass}`}
+                              style={{
+                                backgroundColor: `${accentHex}22`,
+                                border: `1px solid ${accentHex}66`,
+                                color: '#FFFFFF',
+                              }}
+                            >
+                              {numMatch[1]}
+                            </span>
+                            <p className={`text-[#F1F5F9] flex-1 ${scale.bodyClass}`}>
+                              {renderInlineEmphasis(numMatch[2])}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div
+                          key={sIdx}
+                          className="flex items-start gap-2.5 pl-1"
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0 mt-[0.58em]"
+                            style={{ backgroundColor: accentHex }}
+                            aria-hidden="true"
+                          />
+                          <p className={`text-[#F1F5F9] flex-1 ${scale.bodyClass}`}>
+                            {renderInlineEmphasis(itemText)}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function renderStructuredMessageContent(
@@ -132,14 +323,67 @@ function renderStructuredMessageContent(
     );
   }
 
+  // Group Markdown table blocks separately while normalizing <br> outside tables
   const rawLines = content.split('\n');
+  const blocks: Array<
+    | { type: 'table'; lines: string[] }
+    | { type: 'line'; text: string }
+  > = [];
+
+  let i = 0;
+  while (i < rawLines.length) {
+    const trimmed = rawLines[i].trim();
+    const isTableLine =
+      trimmed.startsWith('|') && trimmed.includes('|', 1);
+
+    if (isTableLine) {
+      const tableLines: string[] = [];
+      while (i < rawLines.length) {
+        const t = rawLines[i].trim();
+        if (t.startsWith('|') && t.includes('|', 1)) {
+          tableLines.push(t);
+          i++;
+        } else {
+          break;
+        }
+      }
+      blocks.push({ type: 'table', lines: tableLines });
+    } else {
+      const normalizedParts = rawLines[i]
+        .replace(/<br\s*\/?>/gi, '\n')
+        .split('\n');
+      for (const part of normalizedParts) {
+        blocks.push({ type: 'line', text: part });
+      }
+      i++;
+    }
+  }
 
   return (
-    <div className="space-y-2.5">
-      {rawLines.map((rawLine, idx) => {
-        const line = rawLine.trim();
+    <div className="space-y-3">
+      {blocks.map((block, idx) => {
+        if (block.type === 'table') {
+          return renderTableBlock(
+            block.lines,
+            `tbl-${idx}`,
+            scale,
+            accentHex
+          );
+        }
+
+        const line = cleanAiTextFragment(block.text);
         if (!line) {
           return <div key={idx} className="h-1" aria-hidden="true" />;
+        }
+
+        // Ignore raw markdown horizontal rules
+        if (/^[-*_]{3,}$/.test(line)) {
+          return (
+            <hr
+              key={idx}
+              className="border-t border-[#2A3362]/70 my-2"
+            />
+          );
         }
 
         // 1. Markdown Headings (### Title) or Standalone Bold Headings (**Title**)
@@ -159,7 +403,7 @@ function renderStructuredMessageContent(
           return (
             <h3
               key={idx}
-              className={`font-display font-bold text-white tracking-tight pt-1 first:pt-0 ${scale.headingClass}`}
+              className={`font-display font-bold text-white tracking-tight pt-1.5 first:pt-0 ${scale.headingClass}`}
             >
               {titleText}
             </h3>
@@ -174,7 +418,7 @@ function renderStructuredMessageContent(
           return (
             <div
               key={idx}
-              className="flex items-start gap-3 rounded-xl px-3.5 py-2.5 bg-[#0A0E1F]/65 border border-[#2A3362]/70"
+              className="flex items-start gap-3.5 rounded-xl px-4 py-3 bg-[#0A0E1F]/70 border border-[#2A3362]/75"
             >
               <span
                 className={`shrink-0 rounded-lg font-display font-bold flex items-center justify-center mt-0.5 ${scale.stepNumClass}`}
@@ -199,7 +443,7 @@ function renderStructuredMessageContent(
           return (
             <div key={idx} className="flex items-start gap-3 pl-1 py-0.5">
               <span
-                className="w-2 h-2 rounded-full shrink-0 mt-[0.62em]"
+                className="w-2.5 h-2.5 rounded-full shrink-0 mt-[0.55em]"
                 style={{ backgroundColor: accentHex }}
                 aria-hidden="true"
               />
@@ -210,21 +454,21 @@ function renderStructuredMessageContent(
           );
         }
 
-        // 4. Key Directives / Takeaways (ACTION:, WHY:, TIME:, **Tip:**, **Next:**, **Coach Tip:**, **Check-In:**, **Goal Focus:**, **Mission Focus:**, **Skill Focus:**)
+        // 4. Key Directives / Takeaways (handles **Tip:**, *Tip:*, or plain Tip:)
         const labeledMatch = line.match(
-          /^(?:\*\*)?(ACTION|WHY|TIME|TIP|COACH TIP|NEXT|NEXT STEP|RULE|CHECK-IN|GOAL FOCUS|MISSION FOCUS|SKILL FOCUS)(?:\s*\([^)]*\))?(?:\*\*)?\s*[:\-–]\s*(.+)$/i
+          /^(?:\*{1,2})?(ACTION|WHY|TIME|TIP|NOTE|COACH TIP|NEXT|NEXT STEP|RULE|CHECK-IN|GOAL FOCUS|MISSION FOCUS|SKILL FOCUS)(?:\s*\([^)]*\))?(?:\*{1,2})?\s*[:\-–]\s*(?:\*{1,2})?(.+)$/i
         );
         if (labeledMatch) {
-          const label = labeledMatch[1].replace(/\*\*/g, '').toUpperCase();
-          const rest = labeledMatch[2].replace(/^\*\*\s*/, '').trim();
+          const label = labeledMatch[1].replace(/\*/g, '').toUpperCase();
+          const rest = labeledMatch[2].replace(/^\*{1,2}\s*/, '').trim();
           return (
             <div
               key={idx}
-              className="rounded-r-xl bg-[#0A0E1F]/60 pl-3.5 pr-3 py-2 border-l-2"
+              className="rounded-r-xl bg-[#0A0E1F]/70 pl-4 pr-3.5 py-2.5 border-l-3"
               style={{ borderLeftColor: accentHex }}
             >
               <span
-                className="font-display font-bold tracking-wider text-xs sm:text-sm uppercase mr-2"
+                className="font-display font-bold tracking-wider text-sm sm:text-base uppercase mr-2"
                 style={{ color: accentHex }}
               >
                 {label}:

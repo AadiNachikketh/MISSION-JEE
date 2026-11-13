@@ -388,21 +388,21 @@ export default function App() {
       {/* Desktop Left Flight-Nav Rail (280px persistent sidebar on 1024px+) */}
       <aside
         aria-label="Desktop Navigation Sidebar"
-        className="hidden lg:flex lg:w-[280px] lg:shrink-0 lg:flex-col lg:justify-between orbital-glass-1 border-r border-[#2A3362] p-6 z-20 sticky top-0 h-screen"
+        className="hidden lg:flex lg:w-[276px] lg:shrink-0 lg:flex-col lg:justify-between orbital-glass-1 border-r border-[#2A3362] p-4 xl:p-5 z-20 sticky top-0 h-screen overflow-y-auto"
       >
-        <div className="space-y-8">
+        <div className="space-y-5">
           {/* Brand Lockup */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between px-1">
             <button
               type="button"
               onClick={() => setActiveTab('home')}
               className="flex items-center gap-3 text-left cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7C5CFF] to-[#22D3EE] flex items-center justify-center shadow-[0_0_20px_rgba(124,92,255,0.35)]">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#7C5CFF] to-[#22D3EE] flex items-center justify-center shadow-[0_0_20px_rgba(124,92,255,0.35)]">
                 <Rocket className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="font-display font-bold tracking-wider text-white text-lg block leading-none">
+                <span className="font-display font-bold tracking-wider text-white text-base block leading-none">
                   LAKSHYA
                 </span>
                 <span className="text-[11px] text-[#94A3B8]">
@@ -413,7 +413,7 @@ export default function App() {
           </div>
 
           {/* Primary Navigation */}
-          <nav aria-label="Main Navigation" className="space-y-2">
+          <nav aria-label="Main Navigation" className="space-y-1.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -423,7 +423,7 @@ export default function App() {
                   type="button"
                   onClick={() => setActiveTab(item.id)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`w-full min-h-[52px] px-4 py-3 rounded-2xl border flex items-center justify-between transition-all cursor-pointer ${
+                  className={`w-full min-h-[44px] px-3.5 py-2 rounded-2xl border flex items-center justify-between transition-all cursor-pointer ${
                     isActive
                       ? item.activeClass
                       : 'border-transparent hover:bg-[#131938]/70 hover:border-[#2A3362] text-[#CBD5E1]'
@@ -431,7 +431,7 @@ export default function App() {
                 >
                   <div className="flex items-center gap-3">
                     <Icon
-                      className={`w-5 h-5 ${
+                      className={`w-4.5 h-4.5 shrink-0 ${
                         isActive ? item.accentText : 'text-[#94A3B8]'
                       }`}
                     />
@@ -439,7 +439,7 @@ export default function App() {
                       <div className="font-display font-bold text-sm leading-tight">
                         {item.label}
                       </div>
-                      <div className="text-[11px] text-[#94A3B8]">
+                      <div className="text-[11px] text-[#94A3B8] leading-tight">
                         {item.roleDesc}
                       </div>
                     </div>
@@ -451,8 +451,8 @@ export default function App() {
         </div>
 
         {/* Bottom Aspirant Telemetry Pod */}
-        <div className="space-y-3 pt-6 border-t border-[#2A3362]/80">
-          <div className="rounded-2xl bg-[#0A0E1F]/80 border border-[#2A3362] p-4 space-y-2.5">
+        <div className="space-y-2.5 pt-4 mt-4 border-t border-[#2A3362]/80 shrink-0">
+          <div className="rounded-2xl bg-[#0A0E1F]/80 border border-[#2A3362] p-3.5 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-display font-bold text-white truncate">
                 {profile.name}
@@ -462,7 +462,7 @@ export default function App() {
                 {profile.streak}d
               </span>
             </div>
-            <p className="text-xs text-[#94A3B8] line-clamp-2 leading-relaxed">
+            <p className="text-xs text-[#94A3B8] line-clamp-2 leading-snug">
               {profile.goal}
             </p>
             <div className="text-[11px] font-mono-num text-[#22D3EE] pt-1 border-t border-[#2A3362]/60">
@@ -473,7 +473,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setIsProfileModalOpen(true)}
-            className="w-full min-h-[44px] px-4 py-2 rounded-xl bg-[#131938] hover:bg-[#1b234d] border border-[#2A3362] text-xs font-display font-semibold text-[#CBD5E1] hover:text-white flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            className="w-full min-h-[42px] px-4 py-2 rounded-xl bg-[#131938] hover:bg-[#1b234d] border border-[#2A3362] text-xs font-display font-semibold text-[#CBD5E1] hover:text-white flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <UserCheck className="w-3.5 h-3.5 text-[#22D3EE]" />
             <span>Edit profile</span>
