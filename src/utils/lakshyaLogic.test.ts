@@ -13,6 +13,7 @@ import {
   calculateDailyStudyPlan,
   calculateBmiAndMacros,
   estimateFoodMacros,
+  parseAiFoodNutrition,
   UserProfile,
 } from './lakshyaLogic';
 
@@ -107,9 +108,19 @@ test('calculateBmiAndMacros and estimateFoodMacros compute BMI, daily macros, an
   assert.ok(macros.dailyCalories > 1800);
   assert.ok(macros.dailyProteinG >= 100);
 
-  const eggFood = estimateFoodMacros('2 boiled eggs and oats');
-  assert.ok(eggFood.calories > 200);
-  assert.ok(eggFood.protein >= 15);
+  const eggFood = estimateFoodMacros('2 boiled eggs and 1 banana');
+  assert.ok(eggFood.calories >= 240 && eggFood.calories <= 280);
+  assert.ok(eggFood.protein >= 13);
+
+  const aiParsed = parseAiFoodNutrition(
+    '```json\n{"name":"Masala Dosa & Sambar","calories":410,"protein":11,"carbs":62,"fat":12,"breakdown":"1 masala dosa + 1 bowl sambar"}\n```',
+    'masala dosa with sambar'
+  );
+  assert.equal(aiParsed.aiAnalyzed, true);
+  assert.equal(aiParsed.calories, 410);
+  assert.equal(aiParsed.protein, 11);
+  assert.equal(aiParsed.carbs, 62);
+  assert.equal(aiParsed.fat, 12);
 });
 
 test('canUnlockStage enforces completing all Foundation tasks before unlocking Practice', () => {

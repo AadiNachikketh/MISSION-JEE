@@ -45,6 +45,8 @@ export interface FoodLogEntry {
   carbs: number;
   fat: number;
   date: string; // YYYY-MM-DD
+  breakdown?: string;
+  aiAnalyzed?: boolean;
 }
 
 export interface SkillItem {
@@ -427,15 +429,11 @@ export function estimateFoodMacros(foodInput: string): {
   protein: number;
   carbs: number;
   fat: number;
+  breakdown: string;
 } {
   const cleanName = (foodInput || '').trim() || 'Balanced Meal';
   const lower = cleanName.toLowerCase();
 
-  // Extract leading or embedded multiplier e.g. "2 boiled eggs", "3 rotis"
-  const numMatch = lower.match(/(\d+(?:\.\d+)?)/);
-  const qty = numMatch ? Math.min(20, Math.max(0.5, parseFloat(numMatch[1]))) : 1;
-
-  // Per-unit / per-serving lookup table
   const catalog: {
     keywords: string[];
     cals: number;
@@ -443,51 +441,81 @@ export function estimateFoodMacros(foodInput: string): {
     c: number;
     f: number;
     unitScaled: boolean;
+    label: string;
   }[] = [
-    { keywords: ['egg', 'eggs', 'omelette'], cals: 78, p: 6.5, c: 0.6, f: 5.3, unitScaled: true },
-    { keywords: ['roti', 'chapati', 'phulka'], cals: 105, p: 3.1, c: 22, f: 0.9, unitScaled: true },
-    { keywords: ['paratha', 'aloo paratha'], cals: 210, p: 4.5, c: 29, f: 8.5, unitScaled: true },
-    { keywords: ['paneer'], cals: 265, p: 18.3, c: 3.4, f: 20.8, unitScaled: false },
-    { keywords: ['chicken', 'chicken breast'], cals: 240, p: 38, c: 0, f: 5.5, unitScaled: false },
-    { keywords: ['dal', 'lentil', 'sambar', 'rajma', 'chole'], cals: 190, p: 11, c: 28, f: 3.8, unitScaled: false },
-    { keywords: ['rice', 'biryani', 'pulao', 'khichdi'], cals: 240, p: 5.5, c: 48, f: 2.5, unitScaled: false },
-    { keywords: ['oats', 'oatmeal', 'porridge'], cals: 220, p: 8.5, c: 36, f: 4.2, unitScaled: false },
-    { keywords: ['banana'], cals: 105, p: 1.3, c: 27, f: 0.4, unitScaled: true },
-    { keywords: ['apple', 'orange', 'fruit'], cals: 95, p: 0.5, c: 25, f: 0.3, unitScaled: true },
-    { keywords: ['milk', 'shake', 'smoothie'], cals: 165, p: 8.2, c: 13, f: 8.0, unitScaled: false },
-    { keywords: ['whey', 'protein scoop', 'protein shake'], cals: 130, p: 24, c: 3, f: 1.5, unitScaled: true },
-    { keywords: ['peanut butter', 'peanuts', 'almonds', 'nuts'], cals: 190, p: 7.5, c: 7, f: 16, unitScaled: false },
-    { keywords: ['dosa', 'idli', 'uttapam'], cals: 140, p: 3.8, c: 26, f: 2.2, unitScaled: true },
-    { keywords: ['poha', 'upma'], cals: 230, p: 5.2, c: 40, f: 5.5, unitScaled: false },
-    { keywords: ['curd', 'yogurt', 'dahi', 'buttermilk'], cals: 110, p: 6.5, c: 8, f: 5.0, unitScaled: false },
-    { keywords: ['bread', 'toast', 'sandwich'], cals: 140, p: 4.5, c: 25, f: 2.5, unitScaled: true },
-    { keywords: ['salad', 'sprouts', 'chana'], cals: 160, p: 9.5, c: 24, f: 2.5, unitScaled: false },
+    { keywords: ['egg white', 'egg whites'], cals: 17, p: 3.6, c: 0.2, f: 0.1, unitScaled: true, label: 'egg white' },
+    { keywords: ['egg', 'eggs', 'omelette'], cals: 78, p: 6.5, c: 0.6, f: 5.3, unitScaled: true, label: 'egg' },
+    { keywords: ['roti', 'chapati', 'phulka'], cals: 105, p: 3.1, c: 22, f: 0.9, unitScaled: true, label: 'roti' },
+    { keywords: ['paratha', 'aloo paratha'], cals: 210, p: 4.5, c: 29, f: 8.5, unitScaled: true, label: 'paratha' },
+    { keywords: ['paneer'], cals: 265, p: 18.3, c: 3.4, f: 20.8, unitScaled: false, label: 'paneer' },
+    { keywords: ['chicken breast', 'chicken'], cals: 240, p: 38, c: 0, f: 5.5, unitScaled: false, label: 'chicken' },
+    { keywords: ['dal', 'lentil', 'sambar', 'rajma', 'chole'], cals: 190, p: 11, c: 28, f: 3.8, unitScaled: false, label: 'dal/legumes' },
+    { keywords: ['biryani'], cals: 420, p: 18, c: 52, f: 15, unitScaled: false, label: 'biryani' },
+    { keywords: ['rice', 'pulao', 'khichdi'], cals: 240, p: 5.5, c: 48, f: 2.5, unitScaled: false, label: 'rice' },
+    { keywords: ['oats', 'oatmeal', 'porridge'], cals: 220, p: 8.5, c: 36, f: 4.2, unitScaled: false, label: 'oats' },
+    { keywords: ['banana'], cals: 105, p: 1.3, c: 27, f: 0.4, unitScaled: true, label: 'banana' },
+    { keywords: ['apple', 'orange', 'fruit'], cals: 95, p: 0.5, c: 25, f: 0.3, unitScaled: true, label: 'fruit' },
+    { keywords: ['milk', 'shake', 'smoothie'], cals: 165, p: 8.2, c: 13, f: 8.0, unitScaled: false, label: 'milk' },
+    { keywords: ['whey', 'protein scoop', 'protein shake'], cals: 130, p: 24, c: 3, f: 1.5, unitScaled: true, label: 'whey' },
+    { keywords: ['peanut butter', 'peanuts', 'almonds', 'nuts'], cals: 190, p: 7.5, c: 7, f: 16, unitScaled: false, label: 'nuts/peanut butter' },
+    { keywords: ['masala dosa'], cals: 280, p: 6.2, c: 42, f: 9.5, unitScaled: true, label: 'masala dosa' },
+    { keywords: ['dosa', 'idli', 'uttapam'], cals: 140, p: 3.8, c: 26, f: 2.2, unitScaled: true, label: 'dosa/idli' },
+    { keywords: ['chutney'], cals: 90, p: 1.8, c: 5.5, f: 7.2, unitScaled: false, label: 'chutney' },
+    { keywords: ['poha', 'upma'], cals: 230, p: 5.2, c: 40, f: 5.5, unitScaled: false, label: 'poha/upma' },
+    { keywords: ['curd', 'yogurt', 'dahi', 'buttermilk'], cals: 110, p: 6.5, c: 8, f: 5.0, unitScaled: false, label: 'curd' },
+    { keywords: ['bread', 'toast', 'sandwich'], cals: 140, p: 4.5, c: 25, f: 2.5, unitScaled: true, label: 'bread' },
+    { keywords: ['salad', 'sprouts', 'chana'], cals: 160, p: 9.5, c: 24, f: 2.5, unitScaled: false, label: 'sprouts/salad' },
+    { keywords: ['samosa'], cals: 260, p: 4.5, c: 32, f: 13, unitScaled: true, label: 'samosa' },
+    { keywords: ['maggi', 'noodles', 'pasta'], cals: 310, p: 7.5, c: 46, f: 11, unitScaled: false, label: 'noodles/pasta' },
+    { keywords: ['burger', 'pizza'], cals: 360, p: 14, c: 42, f: 15, unitScaled: true, label: 'burger/pizza' },
   ];
+
+  // Split multi-item meal descriptions by common connectors so each item gets its own quantity
+  const segments = lower.split(/\s*(?:,|&|\band\b|\bwith\b|\+)\s*/i).filter(Boolean);
 
   let totalCals = 0;
   let totalP = 0;
   let totalC = 0;
   let totalF = 0;
-  let matched = false;
+  const matchedLabels: string[] = [];
 
-  for (const item of catalog) {
-    if (item.keywords.some((kw) => lower.includes(kw))) {
-      matched = true;
-      const scale = item.unitScaled ? qty : qty > 10 ? qty / 100 : 1;
-      totalCals += item.cals * scale;
-      totalP += item.p * scale;
-      totalC += item.c * scale;
-      totalF += item.f * scale;
+  for (const seg of segments) {
+    const segNumMatch = seg.match(/(\d+(?:\.\d+)?)\s*(g|gm|grams|ml)?/);
+    const segQty = segNumMatch ? Math.min(1000, Math.max(0.5, parseFloat(segNumMatch[1]))) : 1;
+    const isGrams = Boolean(segNumMatch && segNumMatch[2]);
+
+    for (const item of catalog) {
+      if (item.keywords.some((kw) => seg.includes(kw))) {
+        // Avoid double counting egg white as egg or masala dosa as dosa
+        if (item.label === 'egg' && seg.includes('egg white')) continue;
+        if (item.label === 'dosa/idli' && seg.includes('masala dosa')) continue;
+
+        let scale = 1;
+        if (isGrams || segQty >= 25) {
+          scale = segQty / 100;
+        } else if (item.unitScaled) {
+          scale = Math.min(20, segQty);
+        } else {
+          scale = Math.min(6, segQty);
+        }
+
+        totalCals += item.cals * scale;
+        totalP += item.p * scale;
+        totalC += item.c * scale;
+        totalF += item.f * scale;
+        matchedLabels.push(`${item.label} (${Math.round(item.cals * scale)} kcal)`);
+        break;
+      }
     }
   }
 
-  if (!matched) {
-    // Sensible balanced meal estimate if custom food name
-    const scale = qty > 1 && qty <= 6 ? qty : 1;
-    totalCals = 250 * scale;
-    totalP = 10 * scale;
-    totalC = 34 * scale;
-    totalF = 8 * scale;
+  if (matchedLabels.length === 0) {
+    const numMatch = lower.match(/(\d+(?:\.\d+)?)/);
+    const qty = numMatch ? Math.min(6, Math.max(1, parseFloat(numMatch[1]))) : 1;
+    totalCals = 250 * qty;
+    totalP = 10 * qty;
+    totalC = 34 * qty;
+    totalF = 8 * qty;
   }
 
   return {
@@ -496,7 +524,75 @@ export function estimateFoodMacros(foodInput: string): {
     protein: Math.round(totalP),
     carbs: Math.round(totalC),
     fat: Math.round(totalF),
+    breakdown:
+      matchedLabels.length > 0
+        ? matchedLabels.join(' + ')
+        : 'Standard serving estimate',
   };
+}
+
+/**
+ * System prompt for real-time AI food macro & calorie calculation.
+ */
+export function buildFoodNutritionPrompt(): string {
+  return `You are a precision sports nutritionist and calorie/macro calculator AI.
+Given any meal or food description (including Indian dishes, homemade meals, restaurant items, or packaged snacks with quantities like "2 masala dosas", "150g paneer", "3 boiled egg whites and 1 banana"), calculate the accurate total Calories (kcal), Protein (g), Carbs (g), and Fat (g).
+Respond ONLY with a valid JSON object (no markdown fences, no extra commentary) in this exact format:
+{"name":"<clean capitalized food name>","calories":<integer>,"protein":<integer>,"carbs":<integer>,"fat":<integer>,"breakdown":"<short 1-line item-by-item breakdown>"}`;
+}
+
+/**
+ * Safely parses AI food macro JSON output, with fallback to estimateFoodMacros.
+ */
+export function parseAiFoodNutrition(
+  rawReply: string,
+  fallbackInput: string
+): {
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  breakdown: string;
+  aiAnalyzed: boolean;
+} {
+  const fallback = estimateFoodMacros(fallbackInput);
+  if (!rawReply || typeof rawReply !== 'string') {
+    return { ...fallback, aiAnalyzed: false };
+  }
+
+  try {
+    const jsonMatch = rawReply.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return { ...fallback, aiAnalyzed: false };
+    }
+    const parsed = JSON.parse(jsonMatch[0]);
+    const calories = Number(parsed.calories);
+    const protein = Number(parsed.protein);
+    const carbs = Number(parsed.carbs);
+    const fat = Number(parsed.fat);
+
+    if (
+      !Number.isFinite(calories) ||
+      !Number.isFinite(protein) ||
+      !Number.isFinite(carbs) ||
+      !Number.isFinite(fat)
+    ) {
+      return { ...fallback, aiAnalyzed: false };
+    }
+
+    return {
+      name: String(parsed.name || fallback.name).trim(),
+      calories: Math.max(0, Math.round(calories)),
+      protein: Math.max(0, Math.round(protein)),
+      carbs: Math.max(0, Math.round(carbs)),
+      fat: Math.max(0, Math.round(fat)),
+      breakdown: String(parsed.breakdown || '').trim() || 'AI nutrition analysis',
+      aiAnalyzed: true,
+    };
+  } catch {
+    return { ...fallback, aiAnalyzed: false };
+  }
 }
 
 /**

@@ -18,7 +18,10 @@
  *    and add a redirect in `netlify.toml`: `from = "/api/chat" to = "/.netlify/functions/chat"`.
  */
 
-import { containsSevereDistress } from '../src/utils/lakshyaLogic.ts';
+import {
+  containsSevereDistress,
+  estimateFoodMacros,
+} from '../src/utils/lakshyaLogic.ts';
 
 // Single config constant for the xAI Grok model — change this one value to switch models across the app.
 export const GROK_MODEL =
@@ -97,6 +100,19 @@ export function generateDemoReply(options = {}) {
     ];
     const dayIndex = new Date().getDate() % quotes.length;
     return JSON.stringify(quotes[dayIndex]);
+  }
+
+  // Real-time AI Food Nutrition JSON fallback
+  if (purpose === 'food-macros') {
+    const est = estimateFoodMacros(lastUserMsg);
+    return JSON.stringify({
+      name: est.name,
+      calories: est.calories,
+      protein: est.protein,
+      carbs: est.carbs,
+      fat: est.fat,
+      breakdown: est.breakdown,
+    });
   }
 
   // "Remind me why I started" full-screen personal reminder

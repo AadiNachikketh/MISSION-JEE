@@ -17,7 +17,7 @@ export interface CallGrokOptions {
   companion: CompanionId;
   profile: UserProfile;
   messages: Pick<ChatMessage, 'role' | 'content'>[];
-  purpose?: 'chat' | 'quote' | 'why-i-started';
+  purpose?: 'chat' | 'quote' | 'why-i-started' | 'food-macros';
   temperature?: number;
   stream?: boolean;
   onChunk?: (partialText: string) => void;

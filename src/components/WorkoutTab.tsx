@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Dumbbell,
   Flame,
@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Activity,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 import {
   BodyGoalType,
@@ -19,10 +20,12 @@ import {
   FoodLogEntry,
   UserProfile,
   buildCompanionSystemPrompt,
+  buildFoodNutritionPrompt,
   calculateBmiAndMacros,
-  estimateFoodMacros,
+  parseAiFoodNutrition,
   toLocalDateKey,
 } from '../utils/lakshyaLogic';
+import { callGrok } from '../api/grok';
 import { ChatScreen } from './ChatScreen';
 
 interface WorkoutTabProps {
@@ -118,6 +121,19 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
     profile.heightCm || 172
   );
   const [foodText, setFoodText] = useState('');
+  const [isAnalyzingFood, setIsAnalyzingFood] = useState(false);
+  const [liveFoodPreview, setLiveFoodPreview] = useState<{
+    query: string;
+    name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    breakdown: string;
+    aiAnalyzed: boolean;
+  } | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const previewReqIdRef = useRef(0);
   const [workoutWarning, setWorkoutWarning] = useState('');
   const [completedDrills, setCompletedDrills] = useState<Record<number, boolean>>(
     {}
@@ -145,6 +161,53 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
     { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
 
+  const analyzeFoodWithAi = async (query: string) => {
+    const res = await callGrok({
+      companion: 'workout',
+      profile,
+      purpose: 'food-macros',
+      temperature: 0.1,
+      stream: false,
+      systemPrompt: buildFoodNutritionPrompt(),
+      messages: [
+        {
+          role: 'user',
+          content: `Calculate accurate calories, protein (g), carbs (g), and fat (g) for: "${query}"`,
+        },
+      ],
+    });
+    return parseAiFoodNutrition(res.reply, query);
+  };
+
+  // Real-time debounced AI nutrition preview as the user types what they ate
+  useEffect(() => {
+    const trimmed = foodText.trim();
+    if (trimmed.length < 3) {
+      setLiveFoodPreview(null);
+      setIsPreviewLoading(false);
+      return;
+    }
+
+    const reqId = ++previewReqIdRef.current;
+    setIsPreviewLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const parsed = await analyzeFoodWithAi(trimmed);
+        if (previewReqIdRef.current === reqId) {
+          setLiveFoodPreview({ query: trimmed, ...parsed });
+        }
+      } catch {
+        // Fallback already handled inside parseAiFoodNutrition
+      } finally {
+        if (previewReqIdRef.current === reqId) {
+          setIsPreviewLoading(false);
+        }
+      }
+    }, 550);
+
+    return () => clearTimeout(timer);
+  }, [foodText]);
+
   const handleSaveBiometrics = (
     newWeight: number,
     newHeight: number,
@@ -171,24 +234,38 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
     });
   };
 
-  const handleAddFood = (foodNameToLog: string) => {
+  const handleAddFood = async (foodNameToLog: string) => {
     const trimmed = foodNameToLog.trim();
-    if (!trimmed) return;
-    const estimated = estimateFoodMacros(trimmed);
-    const newEntry: FoodLogEntry = {
-      id: `food-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      name: estimated.name,
-      calories: estimated.calories,
-      protein: estimated.protein,
-      carbs: estimated.carbs,
-      fat: estimated.fat,
-      date: todayKey,
-    };
-    onUpdateProfile({
-      ...profile,
-      foodLog: [...(profile.foodLog || []), newEntry],
-    });
-    setFoodText('');
+    if (!trimmed || isAnalyzingFood) return;
+
+    setIsAnalyzingFood(true);
+    try {
+      const result =
+        liveFoodPreview &&
+        liveFoodPreview.query.toLowerCase() === trimmed.toLowerCase()
+          ? liveFoodPreview
+          : await analyzeFoodWithAi(trimmed);
+
+      const newEntry: FoodLogEntry = {
+        id: `food-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        name: result.name,
+        calories: result.calories,
+        protein: result.protein,
+        carbs: result.carbs,
+        fat: result.fat,
+        breakdown: result.breakdown,
+        aiAnalyzed: result.aiAnalyzed,
+        date: todayKey,
+      };
+      onUpdateProfile({
+        ...profile,
+        foodLog: [...(profile.foodLog || []), newEntry],
+      });
+      setFoodText('');
+      setLiveFoodPreview(null);
+    } finally {
+      setIsAnalyzingFood(false);
+    }
   };
 
   const handleDeleteFood = (id: string) => {
@@ -458,13 +535,13 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
           </div>
         </div>
 
-        {/* Right: Food Intake Log & Automatic Calorie/Protein/Carb/Fat Estimator */}
+        {/* Right: Food Intake Log & Real-Time AI Calorie/Protein/Carb/Fat Analyzer */}
         <div className="lg:col-span-7 orbital-glass-1 rounded-3xl p-5 sm:p-6 space-y-4 flex flex-col justify-between">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-display font-bold uppercase tracking-wider text-[#FFB020]">
                 <Utensils className="w-4 h-4" />
-                <span>Food &amp; Macro Tracker (Today)</span>
+                <span>Real-Time AI Food &amp; Macro Tracker (Today)</span>
               </div>
               <span className="text-xs font-mono-num text-[#94A3B8]">
                 {todayFoods.length} items logged today
@@ -486,18 +563,71 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
                 type="text"
                 value={foodText}
                 onChange={(e) => setFoodText(e.target.value)}
-                placeholder="Write food you ate (e.g., 2 boiled eggs and oats, paneer 100g, 2 rotis)..."
+                placeholder="Type any meal (e.g., 2 masala dosas with chutney, 150g chicken & rice)..."
                 className="flex-1 h-11 px-4 rounded-xl bg-[#0A0E1F] border border-[#2A3362] focus:border-[#FFB020] focus:outline-none text-xs sm:text-sm text-white placeholder-[#64748B]"
               />
               <button
                 type="submit"
+                disabled={isAnalyzingFood || !foodText.trim()}
                 data-testid="add-food-btn"
-                className="min-h-[44px] px-5 rounded-xl bg-gradient-to-r from-[#FFB020] to-[#F59E0B] text-[#0A0E1F] font-display font-bold text-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="min-h-[44px] px-5 rounded-xl bg-gradient-to-r from-[#FFB020] to-[#F59E0B] text-[#0A0E1F] font-display font-bold text-xs flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
               >
-                <Plus className="w-4 h-4" />
-                <span>Add Food</span>
+                {isAnalyzingFood ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>Add Food</span>
+                  </>
+                )}
               </button>
             </form>
+
+            {/* Real-Time AI Nutrition Preview as user types */}
+            {(isPreviewLoading || liveFoodPreview) && foodText.trim().length >= 3 && (
+              <div
+                data-testid="live-ai-food-preview"
+                className="p-3 rounded-2xl bg-[#0A0E1F]/90 border border-[#FFB020]/45 space-y-1.5"
+              >
+                {isPreviewLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-[#FFB020]">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>AI calculating live calories, protein, carbs &amp; fats...</span>
+                  </div>
+                ) : liveFoodPreview ? (
+                  <>
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <span className="font-display font-semibold text-white flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-[#FFB020]" />
+                        <span>AI Live Nutrition Estimate: {liveFoodPreview.name}</span>
+                      </span>
+                      <div className="font-mono-num flex flex-wrap gap-2.5 text-[11px]">
+                        <span className="text-[#FFB020] font-bold">
+                          {liveFoodPreview.calories} kcal
+                        </span>
+                        <span className="text-[#22D3EE] font-semibold">
+                          Protein: {liveFoodPreview.protein}g
+                        </span>
+                        <span className="text-[#CBD5E1]">
+                          Carbs: {liveFoodPreview.carbs}g
+                        </span>
+                        <span className="text-[#F472B6]">
+                          Fat: {liveFoodPreview.fat}g
+                        </span>
+                      </div>
+                    </div>
+                    {liveFoodPreview.breakdown && (
+                      <p className="text-[11px] text-[#94A3B8]">
+                        {liveFoodPreview.breakdown}
+                      </p>
+                    )}
+                  </>
+                ) : null}
+              </div>
+            )}
 
             {/* Quick Tap Food Chips */}
             <div className="flex flex-wrap gap-1.5">
@@ -505,8 +635,9 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
                 <button
                   key={foodChip}
                   type="button"
+                  disabled={isAnalyzingFood}
                   onClick={() => handleAddFood(foodChip)}
-                  className="px-3 py-1.5 rounded-full bg-[#131938] hover:bg-[#1d2552] border border-[#2A3362] text-[11px] text-[#CBD5E1] cursor-pointer transition-colors"
+                  className="px-3 py-1.5 rounded-full bg-[#131938] hover:bg-[#1d2552] border border-[#2A3362] text-[11px] text-[#CBD5E1] cursor-pointer transition-colors disabled:opacity-50"
                 >
                   + {foodChip}
                 </button>
@@ -514,20 +645,28 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
             </div>
 
             {/* Logged Foods List */}
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
               {todayFoods.length === 0 ? (
                 <div className="p-4 rounded-2xl bg-[#0A0E1F]/60 border border-[#2A3362]/70 text-xs text-[#94A3B8] text-center">
-                  No food logged yet today. Type what you ate above to automatically calculate calories, protein, carbs, and fat!
+                  No food logged yet today. Type any dish or meal above—our real-time AI will calculate its exact calories, protein, carbs, and fat!
                 </div>
               ) : (
                 todayFoods.map((item) => (
                   <div
                     key={item.id}
+                    data-testid="logged-food-item"
                     className="p-3 rounded-xl bg-[#0A0E1F]/80 border border-[#2A3362] flex items-center justify-between gap-3"
                   >
-                    <div>
-                      <div className="text-xs sm:text-sm font-display font-semibold text-white">
-                        {item.name}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm font-display font-semibold text-white">
+                          {item.name}
+                        </span>
+                        {item.aiAnalyzed && (
+                          <span className="text-[10px] font-display font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#22D3EE]/15 text-[#22D3EE] border border-[#22D3EE]/30">
+                            AI Verified
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] font-mono-num text-[#94A3B8] flex flex-wrap gap-3 mt-0.5">
                         <span className="text-[#FFB020] font-semibold">
@@ -539,12 +678,17 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
                         <span>Carbs: {item.carbs}g</span>
                         <span>Fat: {item.fat}g</span>
                       </div>
+                      {item.breakdown && (
+                        <p className="text-[11px] text-[#64748B] mt-0.5 truncate">
+                          {item.breakdown}
+                        </p>
+                      )}
                     </div>
                     <button
                       type="button"
                       onClick={() => handleDeleteFood(item.id)}
                       aria-label={`Remove ${item.name}`}
-                      className="p-2 rounded-lg text-[#94A3B8] hover:text-[#ffb4ab] cursor-pointer"
+                      className="p-2 rounded-lg text-[#94A3B8] hover:text-[#ffb4ab] cursor-pointer shrink-0"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
