@@ -39,6 +39,11 @@ jobs:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
         run: npm run build
 
+      - name: Add SPA 404 fallback and disable Jekyll
+        run: |
+          touch dist/.nojekyll
+          cp dist/index.html dist/404.html
+
       - name: Upload dist artifact to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
@@ -51,6 +56,42 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Ensure built bundle deploys after any legacy branch deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          curl -fsSL -X PATCH \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/pages" \
+            -d '{"build_type":"workflow"}' >/dev/null 2>&1 || true
+
+          waited=0
+          for i in $(seq 1 24); do
+            ACTIVE=$(curl -fsSL \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/actions/runs?head_sha=$SHA&per_page=20" \
+              | node -e '
+                const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+                const busy = (data.workflow_runs || []).some(
+                  (r) => r.name === "pages build and deployment" && r.status !== "completed"
+                );
+                process.stdout.write(busy ? "1" : "0");
+              ' 2>/dev/null || echo "0")
+            if [ "$ACTIVE" = "0" ]; then
+              break
+            fi
+            waited=1
+            echo "Waiting for legacy pages build and deployment to finish ($i/24)..."
+            sleep 5
+          done
+          if [ "$waited" = "1" ]; then
+            sleep 3
+          fi
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
