@@ -1,0 +1,6 @@
+{
+  "name": "LAKSHYA — JEE & IIT Motivation Companion",
+  "description": "Orbital Mission Control motivation companion for JEE and IIT aspirants featuring Calm, Now, and Mission AI mentors, study timers, streak tracking, and milestone roadmaps.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

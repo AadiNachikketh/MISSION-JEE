@@ -1,0 +1,226 @@
+---
+name: Orbital Mission Control
+colors:
+  surface: '#0e1224'
+  surface-dim: '#0e1224'
+  surface-bright: '#34384b'
+  surface-container-lowest: '#090d1e'
+  surface-container-low: '#171b2c'
+  surface-container: '#1b1f30'
+  surface-container-high: '#25293b'
+  surface-container-highest: '#303447'
+  on-surface: '#dee1fa'
+  on-surface-variant: '#c9c4d8'
+  inverse-surface: '#dee1fa'
+  inverse-on-surface: '#2c2f42'
+  outline: '#938ea1'
+  outline-variant: '#484555'
+  surface-tint: '#cabeff'
+  primary: '#cabeff'
+  on-primary: '#31009a'
+  primary-container: '#947dff'
+  on-primary-container: '#2a0088'
+  inverse-primary: '#603ce2'
+  secondary: '#5de6ff'
+  on-secondary: '#00363e'
+  secondary-container: '#00cbe6'
+  on-secondary-container: '#00515d'
+  tertiary: '#ffba4b'
+  on-tertiary: '#442b00'
+  tertiary-container: '#c48400'
+  on-tertiary-container: '#3b2500'
+  error: '#ffb4ab'
+  on-error: '#690005'
+  error-container: '#93000a'
+  on-error-container: '#ffdad6'
+  primary-fixed: '#e6deff'
+  primary-fixed-dim: '#cabeff'
+  on-primary-fixed: '#1c0062'
+  on-primary-fixed-variant: '#4816cb'
+  secondary-fixed: '#a2eeff'
+  secondary-fixed-dim: '#2fd9f4'
+  on-secondary-fixed: '#001f25'
+  on-secondary-fixed-variant: '#004e5a'
+  tertiary-fixed: '#ffddb1'
+  tertiary-fixed-dim: '#ffba4b'
+  on-tertiary-fixed: '#291800'
+  on-tertiary-fixed-variant: '#624000'
+  background: '#0e1224'
+  on-background: '#dee1fa'
+  surface-variant: '#303447'
+typography:
+  display-hero:
+    fontFamily: Space Grotesk
+    fontSize: 3.5rem
+    fontWeight: '700'
+    lineHeight: 4rem
+    letterSpacing: -0.03em
+  display-hero-mobile:
+    fontFamily: Space Grotesk
+    fontSize: 2.25rem
+    fontWeight: '700'
+    lineHeight: 2.75rem
+    letterSpacing: -0.02em
+  headline-lg:
+    fontFamily: Space Grotesk
+    fontSize: 2rem
+    fontWeight: '700'
+    lineHeight: 2.5rem
+    letterSpacing: -0.02em
+  headline-lg-mobile:
+    fontFamily: Space Grotesk
+    fontSize: 1.5rem
+    fontWeight: '600'
+    lineHeight: 2rem
+    letterSpacing: -0.01em
+  headline-md:
+    fontFamily: Space Grotesk
+    fontSize: 1.25rem
+    fontWeight: '600'
+    lineHeight: 1.75rem
+    letterSpacing: -0.01em
+  title-md:
+    fontFamily: Space Grotesk
+    fontSize: 1.125rem
+    fontWeight: '500'
+    lineHeight: 1.5rem
+  body-lg:
+    fontFamily: Inter
+    fontSize: 1.125rem
+    fontWeight: '400'
+    lineHeight: 1.75rem
+  body-md:
+    fontFamily: Inter
+    fontSize: 0.9375rem
+    fontWeight: '400'
+    lineHeight: 1.5rem
+  body-sm:
+    fontFamily: Inter
+    fontSize: 0.8125rem
+    fontWeight: '400'
+    lineHeight: 1.25rem
+  label-lg:
+    fontFamily: Space Grotesk
+    fontSize: 0.875rem
+    fontWeight: '600'
+    lineHeight: 1.25rem
+    letterSpacing: 0.04em
+  label-md:
+    fontFamily: Space Grotesk
+    fontSize: 0.75rem
+    fontWeight: '600'
+    lineHeight: 1rem
+    letterSpacing: 0.06em
+  telemetry-num:
+    fontFamily: Space Grotesk
+    fontSize: 1.5rem
+    fontWeight: '700'
+    lineHeight: 1.75rem
+    letterSpacing: 0.02em
+rounded:
+  sm: 0.25rem
+  DEFAULT: 0.5rem
+  md: 0.75rem
+  lg: 1rem
+  xl: 1.5rem
+  full: 9999px
+spacing:
+  gutter: 1.25rem
+  gutter-desktop: 2rem
+  margin: 1rem
+  margin-desktop: 2.5rem
+  space-xs: 0.25rem
+  space-sm: 0.5rem
+  space-md: 1rem
+  space-lg: 1.5rem
+  space-xl: 2.5rem
+---
+
+## Brand & Style
+
+This design system crafts an immersive, high-stakes aerospace command center tuned for intense competitive focus. It approaches the grueling preparation for JEE/IIT not as academic drudgery, but as a deliberate space flight campaign: high-agency, focused, and deeply aspirational.
+
+### Aesthetic Foundation
+- **Genre:** Cinematic Sci-Fi HUD meets Precision Productivity.
+- **Atmosphere:** Deep vacuum space punctuated by controlled high-luminosity neon telemetry, luminescent glass telemetry slabs, and directional energy accents.
+- **Personality:** Decisive, vigilant, brotherly/sisterly mentorship. It demands discipline while removing friction, celebrating grit, and maintaining clear trajectory visualization.
+- **Visual Tenets:** Heavy atmospheric depth, translucent layered glass cards, hairline luminescent strokes, and purposeful status beacons that direct attention without causing cognitive fatigue.
+
+## Colors
+
+The palette operates in strict dark-mode equilibrium to reduce eye fatigue during late-night problem-solving cycles while maintaining dynamic contrast ratios.
+
+### Palette Architecture
+- **Primary (`#7C5CFF` - Electric Violet):** Drives primary momentum, active state triggers, progress arcs, and dominant focal points.
+- **Secondary (`#22D3EE` - Cyber Cyan):** Represents active telemetry, real-time metrics, live timers, and technical instrumentation.
+- **Tertiary (`#FFB020` - Mission Gold):** Reserved for apex milestones, daily mission targets, rank badges, streak multipliers, and vital alerts.
+- **Base Canvas (`#0A0E1F` to `#0E132B`):** Deep cosmic navy gradient that anchors depth without cold pitch-black harshness.
+- **Surfaces (`#131938` at 60% opacity):** Translucent frosted chassis for modules, control banks, and feeds.
+- **Hairline Radiance Borders:** Defined by `#2A3362` for structural containment, upgrading to `#7C5CFF33` or `#22D3EE33` for active states.
+- **Typography Tokens:**
+  - `Text-Emphasized`: `#FFFFFF` for hero displays, headers, and core metrics.
+  - `Text-Standard`: `#CBD5E1` for prompts, problem texts, and active guidance.
+  - `Text-Muted`: `#94A3B8` for field labels, timestamps, and secondary metadata.
+  - `Text-Subtle`: `#64748B` for inactive counters and structural captions.
+
+## Typography
+
+The type system balances technical punch with maximum reading endurance.
+
+- **Space Grotesk (Headings, Telemetry, System Labels):** Provides an assertive, technical aesthetic reminiscent of flight control displays. Use uppercase formatting paired with generous letter spacing (`0.04em` to `0.06em`) for status indicators, rank counters, and operational directives.
+- **Inter (Body, Complex Questions, Explanations):** Serves as the functional counterweight. High x-height and clear apertures ensure that complex mathematical formulas, physics problems, and mentor feedback remain legible under prolonged focus.
+
+## Layout & Spacing
+
+The spatial architecture transitions from an agile, thumbs-first interface on mobile to an expansive multi-cockpit operations dashboard on desktop screens.
+
+### Grid & Layout Strategy
+- **Mobile (Base to 767px):** Single-column stacked stream. Margin: `1rem`, element gaps: `0.75rem` to `1rem`. Mission telemetry sits in fixed top micro-bars; primary call-to-actions pin to bottom safety zones.
+- **Tablet (768px to 1023px):** 8-column layout. Margin: `1.5rem`, Gutter: `1.25rem`. Two-column modules split daily objectives from revision logs.
+- **Desktop (1024px+):** 12-column grid layout with a persistent 280px left flight-nav rail. Margin: `2.5rem`, Gutter: `2rem`. Supports three visible operational zones: Flight Plan (schedule), Live Cockpit (active timer/problem solver), and Telemetry (accuracy metrics and rank ladder).
+- **Spatial Rhythm:** Maintain strict internal vertical cadence using multiples of `0.25rem` (`4px`). Use `space-lg` (`1.5rem`) within cards to maintain breathing room around high-density data.
+
+## Elevation & Depth
+
+Visual hierarchy does not use diffuse, muddy drop shadows. Instead, it relies on physical light transmission: luminous background glows, optical glass density, and directional edge illumination.
+
+### Depth Hierarchy
+- **Level 0 (Deep Space Void):** The root background canvas (`#0A0E1F` to `#0E132B`). Contains subtle chromatic mesh orbs that drift gently beneath the UI to suggest ambient energy.
+- **Level 1 (Sub-Chassis / Dock):** `background: rgba(19, 25, 56, 0.45)`, `backdrop-filter: blur(12px)`, edged with a solid 1px hairline border of `rgba(42, 51, 98, 0.6)`. Used for secondary widgets and passive cards.
+- **Level 2 (Active Mission Containers):** `background: rgba(19, 25, 56, 0.70)`, `backdrop-filter: blur(20px)`, framed with `1px solid rgba(124, 92, 255, 0.25)`. Features a 120px radial highlight positioned at the top-right corner (`rgba(124, 92, 255, 0.08)`).
+- **Level 3 (Apex Floating & Flight Prompts):** Modals, test timers, and milestone banners. `background: rgba(19, 25, 56, 0.85)`, `backdrop-filter: blur(28px)`, framed by `1px solid rgba(34, 211, 238, 0.4)`. Highlighted by a directional glow: `box-shadow: 0 0 30px -5px rgba(34, 211, 238, 0.15)`.
+
+## Shapes
+
+The geometric signature combines generous structural container curves with tight, tactical inner elements.
+
+- **Primary Cards & Mission Modules:** Set to `rounded-xl` (`1.5rem` / `24px` to `28px`), giving large glass panels the aerodynamic feel of modern flight instrumentation.
+- **Inner Controls, Inputs, and Mini-Widgets:** Set to `rounded` (`0.5rem` / `8px`) or `rounded-lg` (`1rem` / `16px`) to preserve usable real estate and create clear parent-child nesting contrast.
+- **Interaction Targets (Buttons, Badges, Status Beacons):** Fully rounded pill geometry (`9999px`) to create high-priority touchpoints that clearly stand out against orthogonal module panels.
+
+## Components
+
+### Buttons
+- **Primary Thrust (Action Button):** Pill-shaped, gradient-filled (`linear-gradient(135deg, #7C5CFF 0%, #633BF3 100%)`). Text in `#FFFFFF`, `label-lg`. Framed by a subtle top-lit inner border (`1px solid rgba(255, 255, 255, 0.3)`). Hover: `box-shadow: 0 0 20px rgba(124, 92, 255, 0.45)`, scale to `1.02`.
+- **Secondary Telemetry Button:** Pill-shaped, transparent glass backing (`rgba(34, 211, 238, 0.08)`), framed with `1px solid rgba(34, 211, 238, 0.4)`. Text in `#22D3EE`. Hover: `background: rgba(34, 211, 238, 0.16)`.
+- **Apex Milestone / Mission Start:** Pill-shaped, gradient-filled (`linear-gradient(135deg, #FFB020 0%, #F59E0B 100%)`). Black bold typography (`#0A0E1F`) for immediate, unmistakable urgency.
+
+### Cards & Mission Slabs
+- **Daily Mission Directive (Hero Card):** Glass container (`24px` radius) bordered with a gradient stroke that shifts from `#FFB020` to transparent. Contains a subtle amber orb glow in the header. Houses current syllabus targets, IIT-JEE countdown telemetry, and a primary action trigger.
+- **Problem Workspace Card:** Neutral glass module (`rgba(19, 25, 56, 0.6)`) with a low-contrast hairline stroke (`#2A3362`). Code/formula snippets render inside deep recessed insets (`#0A0E1F`) with rounded-lg edges.
+
+### Status Indicators & Mission Badges
+- **Status Beacons:** Ultra-compact pill chips (`padding: 0.25rem 0.75rem`).
+  - Active: `#22D3EE` text, `rgba(34, 211, 238, 0.12)` background, accompanied by a pulsing 6px neon dot.
+  - Critical/Urgent: `#FFB020` text, `rgba(255, 176, 32, 0.15)` background.
+  - Locked: `#64748B` text, `rgba(100, 116, 139, 0.1)` background.
+
+### Input Fields & Selectors
+- **Input Terminal:** Flat cosmic surface (`rgba(10, 14, 31, 0.75)`) encased in a `1px` stroke of `#2A3362`. Height `48px`, `rounded-lg`. Typography is crisp white Inter, with placeholder text in `#64748B`. Focus state transitions the border to `#7C5CFF` and adds a soft violet glow (`box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15)`).
+
+### Selection Controls
+- **Radio Buttons / Options Selection:** Custom circular nodes with a 1px border (`#2A3362`). When selected, shifts to an active cyan boundary with an electric center: `border-color: #22D3EE`, fill: `#0E132B`, center: 8px solid `#22D3EE` glowing orb.
+- **Checkboxes:** Rounded squares (`6px` radius). Checked state transitions to `#7C5CFF` with a crisp white check icon and a localized border sheen.
+
+### Progress & Telemetry Arcs
+- **Trajectory Meters:** Background track uses a neutral dark stroke (`#1E264F`). The active progress bar features an electric linear gradient (`#7C5CFF` through `#22D3EE`) with a blurred point light source resting at the leading tip to communicate dynamic forward motion.
