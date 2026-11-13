@@ -16,6 +16,7 @@ import {
   parseAiFoodNutrition,
   UserProfile,
 } from './lakshyaLogic';
+import { generateDemoReply } from '../../api/grok.js';
 
 const baseProfile: UserProfile = {
   name: 'Aarav',
@@ -191,3 +192,50 @@ test('containsSevereDistress detects hopelessness and self-harm phrases', () => 
     false
   );
 });
+
+test('generateDemoReply never repeats the same sentence across turns and adapts to topics', () => {
+  const r1 = generateDemoReply({
+    companion: 'motivation',
+    profile: baseProfile,
+    messages: [{ role: 'user', content: 'hi' }],
+  });
+  const r2 = generateDemoReply({
+    companion: 'motivation',
+    profile: baseProfile,
+    messages: [
+      { role: 'user', content: 'hi' },
+      { role: 'assistant', content: r1 },
+      { role: 'user', content: 'I am struggling with rotational physics' },
+    ],
+  });
+  const r3 = generateDemoReply({
+    companion: 'motivation',
+    profile: baseProfile,
+    messages: [
+      { role: 'user', content: 'hi' },
+      { role: 'assistant', content: r1 },
+      { role: 'user', content: 'I am struggling with rotational physics' },
+      { role: 'assistant', content: r2 },
+      { role: 'user', content: 'Still feeling overwhelmed about my day' },
+    ],
+  });
+  const r4 = generateDemoReply({
+    companion: 'motivation',
+    profile: baseProfile,
+    messages: [
+      { role: 'user', content: 'hi' },
+      { role: 'assistant', content: r1 },
+      { role: 'user', content: 'I am struggling with rotational physics' },
+      { role: 'assistant', content: r2 },
+      { role: 'user', content: 'Still feeling overwhelmed about my day' },
+      { role: 'assistant', content: r3 },
+      { role: 'user', content: 'What next should I do tonight?' },
+    ],
+  });
+
+  assert.notEqual(r1, r2);
+  assert.notEqual(r2, r3);
+  assert.notEqual(r3, r4);
+  assert.match(r2, /Physics/i);
+});
+
