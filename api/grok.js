@@ -361,31 +361,31 @@ export function generateDemoReply(options = {}) {
 
     if (isGreeting) {
       return pickFresh([
-        `Hey Coach mode ON, ${name}! At ${weightKg}kg / ${heightCm}cm aiming for **${bodyGoal}** (strictly **100% bodyweight**, capped at **${workoutHours}h** so JEE comes first), what are we dialing in today—upper body push, core stamina, posture mobility, or protein meals?`,
+        `**Bodyweight Coach Ready (${bodyGoal})**\n- **Setup:** ${weightKg}kg · ${heightCm}cm · ${workoutHours}h max/day (100% bodyweight)\n\nWhat do you want today?\n1. Full bodyweight workout circuit\n2. Neck & back desk posture fix\n3. High-protein student meal ideas`,
       ]);
     }
 
     if (/\b(posture|neck|back|shoulder|desk|stiff|pain)\b/i.test(lower)) {
       return pickFresh([
-        `Long JEE study hours lock up your chest and upper back, ${name}. Do this **8-Minute Desk Posture Fix** right beside your chair:\n1. **Wall Angels:** 3 sets × 12 slow reps (shoulders flat against wall)\n2. **Thoracic Extensions + Cat-Cow:** 2 minutes slow breathing\n3. **Superman Back Holds:** 3 sets × 30 seconds\n4. **Doorway Chest Stretch:** 45 seconds per side\n\nDo that right after evening study and your neck stiffness will melt away.`,
+        `**8-Minute Desk Posture Fix**\n1. **Wall Angels:** 3 sets × 12 slow reps\n2. **Cat-Cow Stretch:** 2 minutes slow breathing\n3. **Superman Back Holds:** 3 sets × 30 seconds\n4. **Doorway Chest Stretch:** 45 seconds each side\n\n**Tip:** Do this right after evening study to clear neck stiffness.`,
       ]);
     }
 
     if (/\b(protein|food|eat|diet|meal|calor|veg|egg|paneer|breakfast|lunch|dinner)\b/i.test(lower)) {
       return pickFresh([
-        `For your **${bodyGoal}** target at **${weightKg}kg**, aim for clean student-friendly protein spread across 4 meals:\n- **Breakfast:** 2–3 boiled eggs (or 50g oats + 250ml milk + 1 tbsp peanut butter)\n- **Lunch:** Dal + 100g paneer/tofu or 150g chicken + 2 rotis + curd\n- **Evening Study Snack:** Roasted chana / sprouts / 1 banana + almonds\n- **Dinner:** Light sabzi + 2 rotis + high-protein dal/paneer\n\nType any meal into the **Food & Macro Tracker** above and I'll calculate your exact calories, protein, carbs, and fats live!`,
+        `**Simple Protein Plan (${bodyGoal} · ${weightKg}kg)**\n1. **Breakfast:** 2–3 boiled eggs OR 50g oats + milk + 1 tbsp peanut butter\n2. **Lunch:** Dal + 100g paneer (or 150g chicken) + 2 rotis + curd\n3. **Snack:** Roasted chana or 1 banana + almonds\n4. **Dinner:** Light sabzi + 2 rotis + dal or paneer\n\n**Tip:** Type or speak your meal above to check exact calories, protein, carbs, and fats.`,
       ]);
     }
 
     if (/\b(pushup|push-up|chest|arm|tricep|core|abs|plank|squat|leg|circuit)\b/i.test(lower)) {
       return pickFresh([
-        `Here's a focused **${bodyGoal} Bodyweight Progression** for "${snippet}":\n- **Round 1 (Strength):** 4 sets × max clean reps Push-Ups (standard → diamond → decline as you improve)\n- **Round 2 (Legs & Power):** 4 sets × 20 Bodyweight Squats + 12 Split Squats/leg\n- **Round 3 (Core Armor):** 3 sets × 45s Forearm Plank + 15 Leg Raises\n\nRest 60s between sets—zero gym equipment, done inside your ${workoutHours}h limit!`,
+        `**${bodyGoal} Bodyweight Strength**\n1. **Push-Ups:** 4 sets × max clean reps (normal → diamond)\n2. **Squats:** 4 sets × 20 reps + 12 Split Squats/leg\n3. **Core:** 3 sets × 45s Plank + 15 Leg Raises\n\n**Rule:** Rest 60s between sets. Zero equipment, done inside ${workoutHours}h.`,
       ]);
     }
 
     return pickFresh([
-      `Got it on "${snippet}", ${name}! Staying strictly **100% bodyweight** (within your **${workoutHours}h** cap for ${goal}), here's today's **${bodyGoal}** circuit:\n1. **Warm-Up (6m):** Jumping jacks, arm circles & hip openers\n2. **Push & Core (18m):** 4 × 12 Push-ups + 45s Plank holds\n3. **Lower Body (15m):** 4 × 20 Squats + 12 Lunges/leg + 10 Burpees\n4. **Cooldown (5m):** Cobra stretch & box breathing\n\nWant me to make this harder, easier, or focus on a specific muscle group?`,
-      `Let's tailor your **${bodyGoal}** session around "${snippet}", ${name}: switch to **EMOM (Every Minute On the Minute) for 16 minutes**:\n- Odd minutes: 10–15 explosive Push-ups + 20s Plank\n- Even minutes: 18 Bodyweight Squats + 10 Mountain Climbers\n\nIt builds serious conditioning in minimal time so you get straight back to JEE ${examYear} prep!`,
+      `**Today's ${bodyGoal} Workout (${workoutHours}h Max)**\n1. **Warm-Up (6m):** Jumping jacks + arm circles\n2. **Push & Core (18m):** 4 × 12 Push-Ups + 45s Plank\n3. **Legs (15m):** 4 × 20 Squats + 12 Lunges/leg + 10 Burpees\n4. **Stretch (5m):** Cobra pose + slow breathing\n\n**Next:** Want an easier version, harder version, or meal plan?`,
+      `**Quick 16-Min Bodyweight Circuit**\n- **Odd Minutes:** 12 Push-Ups + 20s Plank\n- **Even Minutes:** 18 Squats + 10 Mountain Climbers\n\n**Why:** Builds strength fast so you stay fresh for JEE ${examYear}.`,
     ]);
   }
 
@@ -399,59 +399,59 @@ export function generateDemoReply(options = {}) {
 
     if (/\b(python|code|coding|program)\b/i.test(lower)) {
       return pickFresh([
-        `Awesome choice diving into **Python** alongside JEE ${examYear}, ${name}! Here is your **25-Minute Python Micro-Sprint**:\n1. **10 min:** Write a script using lists & functions (e.g., a JEE mock-score accuracy & percentile logger).\n2. **15 min:** Add file saving (` + "`json`" + `) so your scores persist.\n\n**Golden Rule:** Stop sharply at 25 minutes so your primary focus on **${goal}** stays untouched. Want Day 2's Python challenge?`,
-        `Let's level up your **Python** skills cleanly: today try building a **Pomodoro CLI Timer** in 25 lines of Python using ` + "`time.sleep`" + ` and functions—useful for your own JEE study blocks too! Ask me if you want the step-by-step code breakdown.`,
+        `**Python 25-Minute Sprint**\n1. **10m Learn:** Practice lists and functions with a tiny JEE mock-score tracker.\n2. **15m Build:** Save scores into a simple JSON file.\n3. **Stop on Time:** Return to **${goal}** study when the timer rings.\n\n**Next:** Want the Day 2 Python task?`,
+        `**Python Mini-Project (25 Mins)**\n1. **Goal:** Build a 25-line Study Pomodoro Timer.\n2. **Use:** ` + "`time.sleep()`" + ` + a simple countdown loop.\n3. **Bonus:** Use your own timer for Physics PYQs tonight!`,
       ]);
     }
 
     if (/\b(ai|ml|machine learning|llm|prompt|agent)\b/i.test(lower)) {
       return pickFresh([
-        `Learning **AI** in 25-minute micro-sprints is super smart, ${name}! Today's hands-on mission:\n1. **10 min:** Understand how system prompts, temperature, and structured JSON outputs steer LLMs reliably.\n2. **15 min:** Design a clean 3-part prompt (Role + Constraints + Output Schema) to summarize a Physics chapter into 5 exam flashcards.\n\nStop at 25 mins and jump back to JEE! Which AI area excites you most—prompt engineering, Python + APIs, or ML math?`,
+        `**AI Skill 25-Minute Sprint**\n1. **10m Learn:** See how Role + Clear Rules + JSON format control AI replies.\n2. **15m Build:** Write one prompt that turns a Physics chapter into 5 quick flashcards.\n3. **Stop on Time:** Switch straight back to JEE study.\n\n**Next:** Want to focus on prompting, Python APIs, or ML math?`,
       ]);
     }
 
     if (/\b(edit|video|premiere|davinci|capcut|after effects|thumbnail|design)\b/i.test(lower)) {
       return pickFresh([
-        `Creative **Editing** builds sharp visual storytelling, ${name}! Here's a crisp **25-Minute Editing Drill**:\n1. **10 min:** Practice **J-cuts & L-cuts** (overlapping audio 0.5s before/after video cuts) on a 30-second clip—that single trick makes edits feel instantly cinematic.\n2. **15 min:** Match 5 quick cuts cleanly to beat markers + add subtle keyframe zoom (100% → 106%).\n\nLog your 25m sprint above and protect your JEE study hours!`,
+        `**Video Editing 25-Minute Drill**\n1. **10m Practice:** Try **J-cuts & L-cuts** (start audio 0.5s before the video cut).\n2. **15m Edit:** Match 5 fast cuts to music beats + add a smooth 100% → 106% zoom.\n3. **Stop on Time:** Log your sprint and get back to JEE.\n\n**Next:** Which app are you editing on?`,
       ]);
     }
 
     return pickFresh([
-      `Loving your curiosity about "${snippet}", ${name}! Building skills in **${skillList}** alongside JEE ${examYear} works best in tight **25-minute micro-sprints**:\n1. **10 mins:** Learn ONE concrete technique in **${topSkill}**.\n2. **15 mins:** Build or edit a tiny real output yourself (no passive tutorial bingeing).\n3. **Hard Stop:** Log it and switch back to **${goal}**.\n\nWhich specific project or sub-skill inside **${topSkill}** should we tackle first?`,
-      `Here's a 7-day blueprint for **${topSkill}** (25 mins/day only), ${name}:\n- **Days 1–2:** Core fundamentals & interface/syntax fluency\n- **Days 3–4:** Replicate 1 tiny real-world example from scratch\n- **Days 5–6:** Build your own mini twist on it\n- **Day 7:** Ship & review in 15 mins\n\nTell me your current level in ${topSkill} (complete beginner or intermediate) and I'll give you Day 1's exact exercise!`,
+      `**${topSkill} — 25-Minute Plan**\n1. **10m Learn:** Pick just ONE small idea in **${topSkill}**.\n2. **15m Make:** Build or edit one tiny thing yourself (don't just watch videos).\n3. **Hard Stop:** Log it above and switch back to **${goal}**.\n\n**Next:** Tell me your skill level (beginner or intermediate).`,
+      `**7-Day Plan for ${topSkill} (25m/day)**\n- **Days 1–2:** Learn basic tools & shortcuts\n- **Days 3–4:** Copy 1 small real example\n- **Days 5–6:** Make your own tiny version\n- **Day 7:** Finish & review in 15m\n\n**Next:** Ready for Day 1's exact task?`,
     ]);
   }
 
   // 6. MISSION (Main Mission AI — gold)
   if (isGreeting) {
     return pickFresh([
-      `Mission Control online, ${name}. Eye on **${goal}** (JEE ${examYear}).\n\n${hasBacklog ? `Priority active: clearing **${pendingChapters} pending backlog chapters** by **${syllabusDeadline}**.` : 'Syllabus is clean—focus is pure test-taking sharpness and rank speed.'}\n\nWhat do we need right now: a weekly roadmap, milestone breakdown, or an honest progress check?`,
+      `**Mission Control — ${name}**\n- **Main Goal:** ${goal} (JEE ${examYear})\n- **Status:** ${hasBacklog ? `Clear ${pendingChapters} backlog chapters by ${syllabusDeadline}` : 'No backlogs — focus on mocks & speed'}\n\nWhat do you want right now?\n1. Weekly study plan\n2. Monthly milestones\n3. Quick reality check`,
     ]);
   }
 
   if (hasBacklog && (isBacklogTopic || lower.includes('plan') || lower.includes('week'))) {
     return pickFresh([
-      `Mission Focus Activated, ${name}: **Syllabus & Backlog Clearance Mode**.\n\nYou have **${pendingChapters} pending chapters** to finish by **${syllabusDeadline}** on your road to **${goal}**:\n- **60/40 Rule:** 60% current topics, 40% backlog—never create new backlog while clearing old ones.\n- **One-Shot + 25 PYQs:** Use crisp notes + 25 JEE Main PYQs per backlog chapter instead of 15-hour lectures.\n- **+30m Daily Step-Up:** Follow your stepped-up dashboard target today.\n\nWhich pending chapter are we eliminating first this week?`,
-      `Let's break your **${pendingChapters} backlog chapters** into clear milestones before **${syllabusDeadline}**, ${name}:\n1. **Week 1:** Clear the 3 highest-weightage Physics/Chemistry chapters via summary notes + 20 PYQs each.\n2. **Week 2:** Clear next 3 chapters + run a 90-min weekend revision test.\n3. **Daily Rule:** Protect one non-negotiable 90-minute backlog slot every morning.\n\nTell me which subject holds most of your backlog so I can sequence it!`,
+      `**Backlog Clearance Plan (${pendingChapters} Left → ${syllabusDeadline})**\n1. **60 / 40 Rule:** Spend 60% time on today's class and 40% on old backlog.\n2. **Fast Finish:** Read short notes + solve 25 JEE Main PYQs per pending chapter.\n3. **Daily Target:** Hit your stepped-up hours on the home card.\n\n**Next:** Which chapter are you finishing first this week?`,
+      `**Step-by-Step Syllabus Plan**\n1. **Week 1:** Finish top 3 high-weightage pending chapters (notes + 20 PYQs each).\n2. **Week 2:** Finish next 3 chapters + take a 90-min test.\n3. **Morning Rule:** Give your first 90 minutes daily ONLY to backlog.\n\n**Next:** Which subject has the most pending chapters?`,
     ]);
   }
 
   if (lower.includes('plan') || lower.includes('schedule') || lower.includes('week') || lower.includes('milestone')) {
     return pickFresh([
-      `Here is a realistic **7-Day Battle Plan** built around **${goal}** and beating ${struggle.toLowerCase()}, ${name}:\n\n1. **Mon–Wed (Core Thrust):** Two 90-minute blocks/day (40% concept clarity, 60% timed PYQs).\n2. **Thu–Fri (Mixed Speed):** 25 mixed-subject timed questions every evening.\n3. **Saturday (Radar):** One 3-hour mock test + 90-minute error analysis.\n4. **Sunday (Patch & Recharge):** Formula review in the morning, evening off.\n\nWhich subject are we anchoring tomorrow morning?`,
-      `Here are your **3 Monthly Milestones** toward **${goal}** (JEE ${examYear}), ${name}:\n- **Milestone 1 (Foundation Lock):** Zero unrevised class notes + 25 solved PYQs per completed chapter.\n- **Milestone 2 (Speed & Mistake Ledger):** Cut silly/rushed errors by 50% using a dedicated mistake notebook.\n- **Milestone 3 (Exam Temperament):** Weekly full-syllabus timed mocks with calm post-test review.\n\nWhich of the 3 milestones feels weakest right now?`,
+      `**7-Day Plan for ${goal}**\n1. **Mon–Wed:** Two 90-min blocks/day (40% theory, 60% timed PYQs)\n2. **Thu–Fri:** 25 mixed PCM questions every evening with a timer\n3. **Saturday:** Full 3-hour mock test + 90-min mistake check\n4. **Sunday:** Morning formula revision, evening rest\n\n**Next:** Which subject starts tomorrow morning?`,
+      `**3 Monthly Milestones (JEE ${examYear})**\n1. **Base Lock:** Finish notes + 25 PYQs for every active chapter.\n2. **Cut Silly Errors:** Write every wrong test question in a mistake notebook.\n3. **Exam Speed:** Do 1 timed mock every week.\n\n**Next:** Which milestone needs work first?`,
     ]);
   }
 
   if (isMockTopic || isFocusTopic) {
     return pickFresh([
-      `Real talk on "${snippet}", ${name}: beating ${struggle.toLowerCase()} doesn't take superhuman willpower—it takes smaller friction.\n\nLock in **3 daily non-negotiables**: (1) Phone outside reach during study blocks, (2) Start with just 15 PYQs instead of staring at a huge syllabus, (3) Review every mistake the same night. Check off one Mission task above right now—which one are you tackling first?`,
+      `**Beat ${struggle} Today**\n1. **Remove Friction:** Put your phone in another room during study blocks.\n2. **Start Tiny:** Solve just 15 PYQs instead of thinking about the whole syllabus.\n3. **Night Check:** Review today's mistakes before sleeping.\n\n**Next:** Pick one Mission task above and check it off today.`,
     ]);
   }
 
   return pickFresh([
-    `Look at your North Star, ${name}: **${goal}**. On "${snippet}"—here is how we turn intention into rank movement before JEE ${examYear}:\n- **Target 1:** Hit 25–30 timed PYQs today without checking solutions early.\n- **Target 2:** Write down the top 3 mistakes you catch in your Mistake Ledger.\n- **Target 3:** Follow your daily stepped-up study hours on the dashboard.\n\nTell me which specific chapter or target you want to lock in for today!`,
-    `Staying locked on **${goal}** means tuning out comparison and winning today's block, ${name}. Regarding "${snippet}": focus purely on your next 60 minutes of active problem solving and let results compound quietly.\n\nDo you want to break down a specific subject plan or review your weekly milestones next?`,
+    `**Today's Mission Targets**\n1. **Practice:** Solve 25 timed PYQs without checking solutions early.\n2. **Fix Mistakes:** Log your top 3 wrong steps in a notebook.\n3. **Stay Steady:** Complete today's study hours target.\n\n**Next:** Which subject or chapter are you locking in today?`,
+    `**Keep Eyes on ${goal}**\n- **Focus:** Win the next 60 minutes—don't compare yourself to others.\n- **Rule:** One finished chapter beats ten half-read chapters.\n\n**Next:** Want a 7-day plan or backlog breakdown next?`,
   ]);
 }
 

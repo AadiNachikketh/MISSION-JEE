@@ -157,15 +157,24 @@ test('canUnlockStage enforces completing all Foundation tasks before unlocking P
   assert.equal(canUnlockStage('mocks', completedFoundation), false);
 });
 
-test('buildCompanionSystemPrompt injects backlog focus, class, syllabus target, and workout/skills prompts', () => {
+test('buildCompanionSystemPrompt injects backlog focus, class, syllabus target, and workout/skills/mission clarity rules', () => {
   const calmPrompt = buildCompanionSystemPrompt('calm', baseProfile);
   assert.match(calmPrompt, /Aarav/);
   assert.match(calmPrompt, /9 chapters pending/);
   assert.match(calmPrompt, /End of the month · November 2026/);
 
   const workoutPrompt = buildCompanionSystemPrompt('workout', baseProfile);
-  assert.match(workoutPrompt, /100% BODYWEIGHT/);
+  assert.match(workoutPrompt, /100% bodyweight/i);
   assert.match(workoutPrompt, /21\.1/);
+  assert.match(workoutPrompt, /STYLE RULES/);
+
+  const skillsPrompt = buildCompanionSystemPrompt('skills', baseProfile);
+  assert.match(skillsPrompt, /STYLE RULES/);
+  assert.match(skillsPrompt, /Today's 25-Min Steps/);
+
+  const missionPrompt = buildCompanionSystemPrompt('mission', baseProfile);
+  assert.match(missionPrompt, /STYLE RULES/);
+  assert.match(missionPrompt, /Action Plan/);
 });
 
 test('parseNowAction extracts ACTION, WHY, and TIME accurately including parenthetical labels', () => {

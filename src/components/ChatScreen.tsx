@@ -15,6 +15,9 @@ import {
   BookOpen,
   Smile,
   MessageCircleHeart,
+  Dumbbell,
+  Code2,
+  Type,
 } from 'lucide-react';
 import {
   ChatMessage,
@@ -36,6 +39,213 @@ import { Roadmap } from './Roadmap';
 export type CompanionColor = 'cyan' | 'violet' | 'gold' | 'rose';
 
 type MotivationRoleMode = 'all' | 'friend' | 'teacher' | 'guide';
+
+type AiFontLevel = 'easy' | 'big' | 'xl';
+
+const AI_FONT_STORAGE_KEY = 'lakshya_ai_font_level';
+const AI_FONT_CHANGE_EVENT = 'lakshya-ai-font-change';
+
+const FONT_SCALE_CONFIG: Record<
+  AiFontLevel,
+  {
+    label: string;
+    headingClass: string;
+    bodyClass: string;
+    userClass: string;
+    stepNumClass: string;
+    chipClass: string;
+  }
+> = {
+  easy: {
+    label: 'Clear',
+    headingClass: 'text-[18px] sm:text-[20px] leading-snug',
+    bodyClass: 'text-[16px] leading-[1.68]',
+    userClass: 'text-[15.5px] leading-[1.6]',
+    stepNumClass: 'w-6 h-6 text-xs',
+    chipClass: 'text-xs sm:text-[13px]',
+  },
+  big: {
+    label: 'Big',
+    headingClass: 'text-[21px] sm:text-[23px] leading-snug',
+    bodyClass: 'text-[18px] sm:text-[18.5px] leading-[1.72]',
+    userClass: 'text-[17px] leading-[1.65]',
+    stepNumClass: 'w-7 h-7 text-sm',
+    chipClass: 'text-[13px] sm:text-sm',
+  },
+  xl: {
+    label: 'Extra Big',
+    headingClass: 'text-[24px] sm:text-[26px] leading-snug',
+    bodyClass: 'text-[20px] sm:text-[21px] leading-[1.78]',
+    userClass: 'text-[18.5px] leading-[1.7]',
+    stepNumClass: 'w-8 h-8 text-base',
+    chipClass: 'text-sm sm:text-[15px]',
+  },
+};
+
+function renderInlineEmphasis(text: string): React.ReactNode {
+  return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((part, idx) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return (
+        <strong key={idx} className="font-display font-bold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+      return (
+        <em key={idx} className="italic text-[#cabeff]">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+      return (
+        <code
+          key={idx}
+          className="px-1.5 py-0.5 rounded bg-[#0A0E1F] border border-[#2A3362] font-mono-num text-[0.9em] text-[#22D3EE]"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return <React.Fragment key={idx}>{part}</React.Fragment>;
+  });
+}
+
+function renderStructuredMessageContent(
+  content: string,
+  role: 'user' | 'assistant',
+  fontLevel: AiFontLevel,
+  accentHex: string
+): React.ReactNode {
+  const scale = FONT_SCALE_CONFIG[fontLevel];
+
+  if (role === 'user') {
+    return (
+      <div className={`space-y-2 text-white ${scale.userClass}`}>
+        {content.split('\n').map((line, i) => (
+          <p key={i} className="min-h-[0.75em]">
+            {line}
+          </p>
+        ))}
+      </div>
+    );
+  }
+
+  const rawLines = content.split('\n');
+
+  return (
+    <div className="space-y-2.5">
+      {rawLines.map((rawLine, idx) => {
+        const line = rawLine.trim();
+        if (!line) {
+          return <div key={idx} className="h-1" aria-hidden="true" />;
+        }
+
+        // 1. Markdown Headings (### Title) or Standalone Bold Headings (**Title**)
+        const mdHeading = line.match(/^#{1,4}\s+(.+)$/);
+        const standaloneBold =
+          !line.match(/^\d+[.)]\s/) && !line.match(/^[-•*]\s/)
+            ? line.match(/^\*\*([^*]+)\*\*:?$/)
+            : null;
+
+        if (mdHeading || standaloneBold) {
+          const titleText = (
+            mdHeading ? mdHeading[1] : standaloneBold ? standaloneBold[1] : ''
+          )
+            .replace(/\*\*/g, '')
+            .replace(/:$/, '')
+            .trim();
+          return (
+            <h3
+              key={idx}
+              className={`font-display font-bold text-white tracking-tight pt-1 first:pt-0 ${scale.headingClass}`}
+            >
+              {titleText}
+            </h3>
+          );
+        }
+
+        // 2. Numbered Steps (1. ..., 2. ..., 3) ...)
+        const stepMatch = line.match(/^(\d+)[.)]\s+(.+)$/);
+        if (stepMatch) {
+          const stepNum = stepMatch[1];
+          const stepBody = stepMatch[2];
+          return (
+            <div
+              key={idx}
+              className="flex items-start gap-3 rounded-xl px-3.5 py-2.5 bg-[#0A0E1F]/65 border border-[#2A3362]/70"
+            >
+              <span
+                className={`shrink-0 rounded-lg font-display font-bold flex items-center justify-center mt-0.5 ${scale.stepNumClass}`}
+                style={{
+                  backgroundColor: `${accentHex}24`,
+                  border: `1px solid ${accentHex}66`,
+                  color: '#FFFFFF',
+                }}
+              >
+                {stepNum}
+              </span>
+              <p className={`text-[#F1F5F9] flex-1 ${scale.bodyClass}`}>
+                {renderInlineEmphasis(stepBody)}
+              </p>
+            </div>
+          );
+        }
+
+        // 3. Bullet List Items (- ..., • ..., * ...)
+        const bulletMatch = line.match(/^(?:[-•*]|\u2022)\s+(.+)$/);
+        if (bulletMatch) {
+          return (
+            <div key={idx} className="flex items-start gap-3 pl-1 py-0.5">
+              <span
+                className="w-2 h-2 rounded-full shrink-0 mt-[0.62em]"
+                style={{ backgroundColor: accentHex }}
+                aria-hidden="true"
+              />
+              <p className={`text-[#F1F5F9] flex-1 ${scale.bodyClass}`}>
+                {renderInlineEmphasis(bulletMatch[1])}
+              </p>
+            </div>
+          );
+        }
+
+        // 4. Key Directives / Takeaways (ACTION:, WHY:, TIME:, **Tip:**, **Next:**, **Coach Tip:**, **Check-In:**, **Goal Focus:**, **Mission Focus:**, **Skill Focus:**)
+        const labeledMatch = line.match(
+          /^(?:\*\*)?(ACTION|WHY|TIME|TIP|COACH TIP|NEXT|NEXT STEP|RULE|CHECK-IN|GOAL FOCUS|MISSION FOCUS|SKILL FOCUS)(?:\s*\([^)]*\))?(?:\*\*)?\s*[:\-–]\s*(.+)$/i
+        );
+        if (labeledMatch) {
+          const label = labeledMatch[1].replace(/\*\*/g, '').toUpperCase();
+          const rest = labeledMatch[2].replace(/^\*\*\s*/, '').trim();
+          return (
+            <div
+              key={idx}
+              className="rounded-r-xl bg-[#0A0E1F]/60 pl-3.5 pr-3 py-2 border-l-2"
+              style={{ borderLeftColor: accentHex }}
+            >
+              <span
+                className="font-display font-bold tracking-wider text-xs sm:text-sm uppercase mr-2"
+                style={{ color: accentHex }}
+              >
+                {label}:
+              </span>
+              <span className={`text-[#F8FAFC] ${scale.bodyClass}`}>
+                {renderInlineEmphasis(rest)}
+              </span>
+            </div>
+          );
+        }
+
+        // 5. Standard Clear Paragraph
+        return (
+          <p key={idx} className={`text-[#F1F5F9] ${scale.bodyClass}`}>
+            {renderInlineEmphasis(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
 
 interface ChatScreenProps {
   companion: CompanionId;
@@ -186,6 +396,46 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const [streamingText, setStreamingText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isDemoMode, setIsDemoMode] = useState(false);
+
+  // Synced Understanding-Level Text Size across ALL AI screens (defaults to "Big" for easy reading)
+  const [aiFontLevel, setAiFontLevel] = useState<AiFontLevel>(() => {
+    try {
+      const saved = window.localStorage.getItem(AI_FONT_STORAGE_KEY);
+      if (saved === 'easy' || saved === 'big' || saved === 'xl') return saved;
+    } catch {
+      // Ignore storage failures
+    }
+    return 'big';
+  });
+
+  useEffect(() => {
+    const syncFontLevel = () => {
+      try {
+        const saved = window.localStorage.getItem(AI_FONT_STORAGE_KEY);
+        if (saved === 'easy' || saved === 'big' || saved === 'xl') {
+          setAiFontLevel(saved);
+        }
+      } catch {
+        // Ignore storage failures
+      }
+    };
+    window.addEventListener(AI_FONT_CHANGE_EVENT, syncFontLevel);
+    window.addEventListener('storage', syncFontLevel);
+    return () => {
+      window.removeEventListener(AI_FONT_CHANGE_EVENT, syncFontLevel);
+      window.removeEventListener('storage', syncFontLevel);
+    };
+  }, []);
+
+  const handleSelectAiFontLevel = (level: AiFontLevel) => {
+    setAiFontLevel(level);
+    try {
+      window.localStorage.setItem(AI_FONT_STORAGE_KEY, level);
+      window.dispatchEvent(new Event(AI_FONT_CHANGE_EVENT));
+    } catch {
+      // Ignore storage failures
+    }
+  };
 
   // "Now" companion controls
   const [selectedTimeChip, setSelectedTimeChip] = useState<string>('30 min');
@@ -710,7 +960,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           />
         )}
 
-      {/* Quick Chips Bar for All Companions (Calm, Now, Motivation, Mission) */}
+      {/* Quick Chips Bar for All Companions */}
       <div className="space-y-2">
         <span className="text-xs font-display font-semibold text-[#94A3B8] uppercase tracking-wider">
           {effectiveCompanion === 'motivation'
@@ -730,7 +980,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
                   effectiveCompanion === 'now'
                 )
               }
-              className="min-h-[40px] px-4 py-2 rounded-full bg-[#131938]/85 hover:bg-[#1d2550] border border-[#2A3362] text-xs text-[#dee1fa] font-medium transition-all cursor-pointer disabled:opacity-50"
+              className={`min-h-[42px] px-4 py-2 rounded-full bg-[#131938]/85 hover:bg-[#1d2550] border border-[#2A3362] text-[#dee1fa] font-medium transition-all cursor-pointer disabled:opacity-50 ${FONT_SCALE_CONFIG[aiFontLevel].chipClass}`}
             >
               {chip}
             </button>
@@ -740,14 +990,18 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
       {/* Main Conversation Stream */}
       <div className="orbital-glass-1 rounded-3xl p-4 sm:p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-[#2A3362]/70 pb-3">
-          <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#2A3362]/70 pb-3.5">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-[#94A3B8]">
             {effectiveCompanion === 'calm' ? (
               <Wind className="w-4 h-4 text-[#22D3EE]" />
             ) : effectiveCompanion === 'now' ? (
               <Zap className="w-4 h-4 text-[#7C5CFF]" />
             ) : effectiveCompanion === 'motivation' ? (
               <Heart className="w-4 h-4 text-[#F472B6] fill-current" />
+            ) : effectiveCompanion === 'workout' ? (
+              <Dumbbell className="w-4 h-4 text-[#22D3EE]" />
+            ) : effectiveCompanion === 'skills' ? (
+              <Code2 className="w-4 h-4 text-[#7C5CFF]" />
             ) : (
               <Compass className="w-4 h-4 text-[#FFB020]" />
             )}
@@ -757,37 +1011,84 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
                 : `${effectiveCompanion} Comms Channel`}
             </span>
             {isDemoMode && (
-              <span className="text-[11px] text-[#94A3B8]">
+              <span className="text-xs text-[#94A3B8]">
                 · Built-in Mentor Active
               </span>
             )}
           </div>
-          <span className="text-xs text-[#64748B] font-mono-num">
-            {activeMessages.length}{' '}
-            {activeMessages.length === 1 ? 'message' : 'messages'}
-          </span>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Understanding-Level Text Size Control (Synced across all AI tabs) */}
+            <div
+              role="group"
+              aria-label="AI reading text size"
+              className="flex items-center gap-1.5 rounded-xl bg-[#0A0E1F]/90 border border-[#2A3362] p-1"
+            >
+              <span className="flex items-center gap-1 px-2 text-[11px] font-display font-semibold text-[#94A3B8] uppercase tracking-wider">
+                <Type className="w-3.5 h-3.5" style={{ color: themeConfig.accentHex }} />
+                <span className="hidden sm:inline">Text Size</span>
+              </span>
+              {(['easy', 'big', 'xl'] as AiFontLevel[]).map((level) => {
+                const active = aiFontLevel === level;
+                return (
+                  <button
+                    key={level}
+                    type="button"
+                    data-testid={`ai-font-${level}`}
+                    aria-pressed={active}
+                    onClick={() => handleSelectAiFontLevel(level)}
+                    className={`min-h-[30px] px-2.5 py-1 rounded-lg text-xs font-display font-bold transition-all cursor-pointer ${
+                      active
+                        ? 'text-[#0A0E1F] shadow-sm'
+                        : 'text-[#CBD5E1] hover:text-white'
+                    }`}
+                    style={
+                      active
+                        ? { backgroundColor: themeConfig.accentHex }
+                        : undefined
+                    }
+                  >
+                    {FONT_SCALE_CONFIG[level].label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <span className="text-xs text-[#64748B] font-mono-num">
+              {activeMessages.length}{' '}
+              {activeMessages.length === 1 ? 'message' : 'messages'}
+            </span>
+          </div>
         </div>
 
         {/* Empty State */}
         {activeMessages.length === 0 && !isLoading && !errorMsg && (
-          <div className="py-10 text-center max-w-md mx-auto space-y-3">
-            <p className="text-base font-display font-semibold text-white">
+          <div className="py-10 text-center max-w-xl mx-auto space-y-3">
+            <p className="text-lg sm:text-xl font-display font-semibold text-white leading-snug">
               {effectiveCompanion === 'calm'
                 ? `Take a breath, ${profile.name}. What’s weighing on your mind today?`
                 : effectiveCompanion === 'now'
                 ? `Pick your time window & energy above, or ask me what to study right now, ${profile.name}!`
                 : effectiveCompanion === 'motivation'
                 ? `Hey ${profile.name}! I’m your friend, teacher, and guide. Tell me anything—how your day went, what’s troubling you, or what you want to achieve!`
-                : `Ready to plot your next milestone toward "${profile.goal}", ${profile.name}?`}
+                : effectiveCompanion === 'workout'
+                ? `Ready for simple, step-by-step bodyweight workouts & food plans, ${profile.name}?`
+                : effectiveCompanion === 'skills'
+                ? `Pick any skill and I’ll teach it in clear, easy 25-minute steps, ${profile.name}.`
+                : `Ready to plot your next clear step toward "${profile.goal}", ${profile.name}?`}
             </p>
-            <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Every reply remembers your target exam (JEE {profile.examYear}) and helps you overcome {profile.struggle.toLowerCase()}.
+            <p className="text-sm text-[#CBD5E1] leading-relaxed">
+              Replies are big, simple, and arranged step-by-step so everything is easy to understand.
             </p>
           </div>
         )}
 
         {/* Messages List */}
-        <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1">
+        <div
+          data-testid="ai-messages-list"
+          data-font-level={aiFontLevel}
+          className="space-y-4 max-h-[560px] overflow-y-auto pr-1"
+        >
           {activeMessages.map((msg) => (
             <div
               key={msg.id}
@@ -796,54 +1097,27 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
               }`}
             >
               <div
-                className={`max-w-[88%] sm:max-w-[78%] rounded-2xl p-4 border text-sm leading-relaxed whitespace-pre-line ${
+                className={`rounded-2xl p-4 sm:p-5 border ${
                   msg.role === 'user'
-                    ? themeConfig.userBubble
-                    : themeConfig.aiBubble
+                    ? `max-w-[88%] sm:max-w-[78%] ${themeConfig.userBubble}`
+                    : `max-w-[96%] sm:max-w-[88%] ${themeConfig.aiBubble}`
                 }`}
               >
-                <div className="flex items-center justify-between gap-4 mb-1.5 text-[11px] text-[#94A3B8]">
-                  <span className="font-display font-semibold uppercase tracking-wider">
+                <div className="flex items-center justify-between gap-4 mb-2 text-xs text-[#94A3B8]">
+                  <span className="font-display font-bold uppercase tracking-wider">
                     {msg.role === 'user'
                       ? profile.name
                       : effectiveCompanion === 'motivation'
                       ? 'MOTIVATION · FRIEND & GUIDE'
-                      : effectiveCompanion.toUpperCase()}
+                      : `${effectiveCompanion.toUpperCase()} AI`}
                   </span>
                 </div>
-                <div className="space-y-1.5">
-                  {msg.content.split('\n').map((line, lineIdx) => (
-                    <p key={lineIdx} className="min-h-[1em]">
-                      {line
-                        .split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g)
-                        .map((part, partIdx) => {
-                          if (part.startsWith('**') && part.endsWith('**')) {
-                            return (
-                              <strong
-                                key={partIdx}
-                                className="font-semibold text-white"
-                              >
-                                {part.slice(2, -2)}
-                              </strong>
-                            );
-                          }
-                          if (part.startsWith('*') && part.endsWith('*')) {
-                            return (
-                              <em
-                                key={partIdx}
-                                className="italic text-[#cabeff]"
-                              >
-                                {part.slice(1, -1)}
-                              </em>
-                            );
-                          }
-                          return (
-                            <React.Fragment key={partIdx}>{part}</React.Fragment>
-                          );
-                        })}
-                    </p>
-                  ))}
-                </div>
+                {renderStructuredMessageContent(
+                  msg.content,
+                  msg.role === 'user' ? 'user' : 'assistant',
+                  aiFontLevel,
+                  themeConfig.accentHex
+                )}
               </div>
             </div>
           ))}
@@ -852,30 +1126,35 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           {isLoading && (
             <div className="flex justify-start" aria-live="polite">
               <div
-                className={`max-w-[88%] sm:max-w-[78%] rounded-2xl p-4 border text-sm leading-relaxed whitespace-pre-line ${themeConfig.aiBubble}`}
+                className={`max-w-[96%] sm:max-w-[88%] rounded-2xl p-4 sm:p-5 border ${themeConfig.aiBubble}`}
               >
-                <div className="flex items-center gap-2 mb-1.5 text-[11px] font-display font-semibold uppercase tracking-wider text-[#94A3B8]">
+                <div className="flex items-center gap-2 mb-2 text-xs font-display font-bold uppercase tracking-wider text-[#94A3B8]">
                   <span>
                     {effectiveCompanion === 'motivation'
                       ? 'MOTIVATION · FRIEND & GUIDE'
-                      : effectiveCompanion.toUpperCase()}
+                      : `${effectiveCompanion.toUpperCase()} AI`}
                   </span>
                   <span>·</span>
                   <span>
-                    {streamingText ? 'Responding...' : 'Listening & thinking...'}
+                    {streamingText ? 'Responding...' : 'Thinking clearly...'}
                   </span>
                 </div>
                 {streamingText ? (
-                  <div>{streamingText}</div>
+                  renderStructuredMessageContent(
+                    streamingText,
+                    'assistant',
+                    aiFontLevel,
+                    themeConfig.accentHex
+                  )
                 ) : (
-                  <div className="flex items-center gap-1.5 py-1">
-                    <span className="w-2 h-2 rounded-full bg-[#CBD5E1] animate-bounce" />
+                  <div className="flex items-center gap-2 py-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#CBD5E1] animate-bounce" />
                     <span
-                      className="w-2 h-2 rounded-full bg-[#CBD5E1] animate-bounce"
+                      className="w-2.5 h-2.5 rounded-full bg-[#CBD5E1] animate-bounce"
                       style={{ animationDelay: '150ms' }}
                     />
                     <span
-                      className="w-2 h-2 rounded-full bg-[#CBD5E1] animate-bounce"
+                      className="w-2.5 h-2.5 rounded-full bg-[#CBD5E1] animate-bounce"
                       style={{ animationDelay: '300ms' }}
                     />
                   </div>
@@ -940,18 +1219,22 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
                 ? `Ask Now what to study or type your time & energy, ${profile.name}...`
                 : effectiveCompanion === 'motivation'
                 ? `Talk to your friend, teacher & guide about anything, ${profile.name}...`
+                : effectiveCompanion === 'workout'
+                ? `Ask Workout AI for bodyweight exercises or simple meal plans, ${profile.name}...`
+                : effectiveCompanion === 'skills'
+                ? `Ask Skills AI for a 25-min step-by-step lesson, ${profile.name}...`
                 : 'Ask Mission for milestones, a weekly plan, or a reality check...'
             }
-            className="flex-1 h-12 px-4 rounded-xl bg-[#0A0E1F]/90 border border-[#2A3362] focus:border-[#7C5CFF] focus:outline-none text-sm text-white placeholder-[#64748B]"
+            className="flex-1 h-12 sm:h-13 px-4 rounded-xl bg-[#0A0E1F]/90 border border-[#2A3362] focus:border-[#7C5CFF] focus:outline-none text-[15px] sm:text-base text-white placeholder-[#64748B]"
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
             aria-label={`Send message to ${effectiveCompanion}`}
-            className={`min-h-[48px] px-5 rounded-full font-display font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40 whitespace-nowrap ${themeConfig.buttonGrad}`}
+            className={`min-h-[48px] px-5 rounded-full font-display font-bold text-sm flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40 whitespace-nowrap ${themeConfig.buttonGrad}`}
           >
             <span>Send</span>
-            <Send className="w-3.5 h-3.5" />
+            <Send className="w-4 h-4" />
           </button>
         </form>
       </div>
