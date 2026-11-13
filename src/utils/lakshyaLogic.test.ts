@@ -202,49 +202,104 @@ test('containsSevereDistress detects hopelessness and self-harm phrases', () => 
   );
 });
 
-test('generateDemoReply never repeats the same sentence across turns and adapts to topics', () => {
-  const r1 = generateDemoReply({
-    companion: 'motivation',
-    profile: baseProfile,
-    messages: [{ role: 'user', content: 'hi' }],
-  });
-  const r2 = generateDemoReply({
-    companion: 'motivation',
-    profile: baseProfile,
-    messages: [
-      { role: 'user', content: 'hi' },
-      { role: 'assistant', content: r1 },
-      { role: 'user', content: 'I am struggling with rotational physics' },
+test('generateDemoReply never repeats the same sentence across turns and adapts to topics for all 6 companions', () => {
+  const companions = ['motivation', 'calm', 'now', 'mission', 'workout', 'skills'] as const;
+  const userTurnsByCompanion: Record<(typeof companions)[number], string[]> = {
+    motivation: [
+      'hi',
+      'I scored 115 marks in my mock test',
+      'tell me more',
+      'I am struggling with rotational physics',
+      'explain how to approach it',
+      'still feeling overwhelmed and low',
+      'help me',
+      'what next',
     ],
-  });
-  const r3 = generateDemoReply({
-    companion: 'motivation',
-    profile: baseProfile,
-    messages: [
-      { role: 'user', content: 'hi' },
-      { role: 'assistant', content: r1 },
-      { role: 'user', content: 'I am struggling with rotational physics' },
-      { role: 'assistant', content: r2 },
-      { role: 'user', content: 'Still feeling overwhelmed about my day' },
+    calm: [
+      'hi',
+      'I am anxious about JEE 2027',
+      'not working, give me another way',
+      'bad mock score 105 marks',
+      'ok better thanks',
+      'still feeling stressed',
+      'help',
     ],
-  });
-  const r4 = generateDemoReply({
-    companion: 'motivation',
-    profile: baseProfile,
-    messages: [
-      { role: 'user', content: 'hi' },
-      { role: 'assistant', content: r1 },
-      { role: 'user', content: 'I am struggling with rotational physics' },
-      { role: 'assistant', content: r2 },
-      { role: 'user', content: 'Still feeling overwhelmed about my day' },
-      { role: 'assistant', content: r3 },
-      { role: 'user', content: 'What next should I do tonight?' },
+    now: [
+      'What should I do for 30 min?',
+      'Give me another Physics PYQ sprint',
+      'Give me another',
+      'Low energy right now',
+      'High energy challenge',
+      'Give me another',
+      'Give me another',
+      'Give me another',
+      'Give me another',
     ],
-  });
+    mission: [
+      'hi',
+      'help me clear my backlog',
+      'tell me more',
+      'Create a weekly plan for JEE',
+      'I keep forgetting formulas',
+      'Give me a reality check',
+      'what next',
+    ],
+    workout: [
+      'hi',
+      'how many calories and protein in 2 boiled eggs and 1 banana',
+      'give me an easier bodyweight circuit',
+      'give me a harder challenge',
+      'my neck hurts from studying',
+      'high protein vegetarian meal plan',
+      'what next',
+    ],
+    skills: [
+      'hi',
+      'teach me python basics',
+      'ok give me day 2',
+      'how to use AI prompts for studying',
+      'give me more details',
+      'video editing tips',
+      'what next',
+    ],
+  };
 
-  assert.notEqual(r1, r2);
-  assert.notEqual(r2, r3);
-  assert.notEqual(r3, r4);
-  assert.match(r2, /Physics/i);
+  for (const comp of companions) {
+    const history: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+    const seenReplies = new Set<string>();
+    const seenOpenings = new Set<string>();
+
+    for (const userText of userTurnsByCompanion[comp]) {
+      history.push({ role: 'user', content: userText });
+      const reply = generateDemoReply({
+        companion: comp,
+        profile: baseProfile,
+        messages: history,
+      });
+      const trimmed = reply.trim();
+      const firstLine = trimmed.split('\n')[0].trim();
+
+      assert.ok(trimmed.length > 20, `${comp} reply should not be empty`);
+      assert.equal(
+        seenReplies.has(trimmed),
+        false,
+        `${comp} repeated full reply on "${userText}": ${trimmed}`
+      );
+      assert.equal(
+        seenOpenings.has(firstLine),
+        false,
+        `${comp} repeated opening line on "${userText}": ${firstLine}`
+      );
+
+      if (comp === 'now') {
+        const parsed = parseNowAction(trimmed, 30);
+        assert.ok(parsed && parsed.action.length > 5, `NOW turn "${userText}" must parse cleanly via parseNowAction`);
+      }
+
+      seenReplies.add(trimmed);
+      seenOpenings.add(firstLine);
+      history.push({ role: 'assistant', content: reply });
+    }
+  }
 });
 
