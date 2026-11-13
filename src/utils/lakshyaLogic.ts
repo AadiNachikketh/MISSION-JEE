@@ -431,7 +431,11 @@ export function estimateFoodMacros(foodInput: string): {
   fat: number;
   breakdown: string;
 } {
-  const cleanName = (foodInput || '').trim() || 'Balanced Meal';
+  const rawClean = (foodInput || '').trim() || 'Balanced Meal';
+  const cleanName =
+    rawClean
+      .replace(/^(?:i\s+(?:just\s+)?(?:ate|had|consumed)|had|ate|eating|for\s+(?:breakfast|lunch|dinner|snacks?)\s+i\s+had)\s+/i, '')
+      .trim() || rawClean;
   const lower = cleanName.toLowerCase();
 
   const catalog: {
@@ -444,34 +448,74 @@ export function estimateFoodMacros(foodInput: string): {
     label: string;
   }[] = [
     { keywords: ['egg white', 'egg whites'], cals: 17, p: 3.6, c: 0.2, f: 0.1, unitScaled: true, label: 'egg white' },
-    { keywords: ['egg', 'eggs', 'omelette'], cals: 78, p: 6.5, c: 0.6, f: 5.3, unitScaled: true, label: 'egg' },
-    { keywords: ['roti', 'chapati', 'phulka'], cals: 105, p: 3.1, c: 22, f: 0.9, unitScaled: true, label: 'roti' },
-    { keywords: ['paratha', 'aloo paratha'], cals: 210, p: 4.5, c: 29, f: 8.5, unitScaled: true, label: 'paratha' },
-    { keywords: ['paneer'], cals: 265, p: 18.3, c: 3.4, f: 20.8, unitScaled: false, label: 'paneer' },
-    { keywords: ['chicken breast', 'chicken'], cals: 240, p: 38, c: 0, f: 5.5, unitScaled: false, label: 'chicken' },
-    { keywords: ['dal', 'lentil', 'sambar', 'rajma', 'chole'], cals: 190, p: 11, c: 28, f: 3.8, unitScaled: false, label: 'dal/legumes' },
+    { keywords: ['egg bhurji', 'scrambled eggs'], cals: 195, p: 13, c: 3, f: 14, unitScaled: false, label: 'egg bhurji' },
+    { keywords: ['egg', 'eggs', 'omelette', 'omelet'], cals: 78, p: 6.5, c: 0.6, f: 5.3, unitScaled: true, label: 'egg' },
+    { keywords: ['aloo paratha', 'gobi paratha', 'paneer paratha'], cals: 250, p: 6, c: 33, f: 10.5, unitScaled: true, label: 'stuffed paratha' },
+    { keywords: ['paratha', 'lachha paratha'], cals: 210, p: 4.5, c: 29, f: 8.5, unitScaled: true, label: 'paratha' },
+    { keywords: ['roti', 'chapati', 'phulka', 'bhakri'], cals: 105, p: 3.1, c: 22, f: 0.9, unitScaled: true, label: 'roti' },
+    { keywords: ['naan', 'kulcha', 'bhatura'], cals: 260, p: 7, c: 45, f: 5.5, unitScaled: true, label: 'naan/kulcha' },
+    { keywords: ['paneer tikka', 'paneer bhurji', 'kadai paneer', 'palak paneer'], cals: 290, p: 16, c: 9, f: 21, unitScaled: false, label: 'paneer dish' },
+    { keywords: ['paneer', 'cottage cheese'], cals: 265, p: 18.3, c: 3.4, f: 20.8, unitScaled: false, label: 'paneer' },
+    { keywords: ['tofu'], cals: 120, p: 13, c: 2.5, f: 6.5, unitScaled: false, label: 'tofu' },
+    { keywords: ['butter chicken', 'chicken curry'], cals: 340, p: 24, c: 11, f: 22, unitScaled: false, label: 'chicken curry' },
+    { keywords: ['chicken breast', 'grilled chicken', 'chicken'], cals: 195, p: 32, c: 0, f: 6.5, unitScaled: false, label: 'chicken' },
+    { keywords: ['fish', 'salmon', 'tuna'], cals: 185, p: 24, c: 0, f: 9.5, unitScaled: false, label: 'fish' },
+    { keywords: ['dal makhani'], cals: 280, p: 9, c: 26, f: 15, unitScaled: false, label: 'dal makhani' },
+    { keywords: ['dal', 'lentil', 'sambar', 'rasam', 'rajma', 'chole', 'kadhi'], cals: 185, p: 10.5, c: 27, f: 3.8, unitScaled: false, label: 'dal/legumes' },
     { keywords: ['biryani'], cals: 420, p: 18, c: 52, f: 15, unitScaled: false, label: 'biryani' },
-    { keywords: ['rice', 'pulao', 'khichdi'], cals: 240, p: 5.5, c: 48, f: 2.5, unitScaled: false, label: 'rice' },
-    { keywords: ['oats', 'oatmeal', 'porridge'], cals: 220, p: 8.5, c: 36, f: 4.2, unitScaled: false, label: 'oats' },
+    { keywords: ['fried rice'], cals: 330, p: 8, c: 50, f: 11, unitScaled: false, label: 'fried rice' },
+    { keywords: ['rice', 'pulao', 'khichdi', 'jeera rice', 'curd rice'], cals: 230, p: 5, c: 47, f: 2.2, unitScaled: false, label: 'rice' },
+    { keywords: ['oats', 'oatmeal', 'porridge', 'muesli'], cals: 215, p: 8.5, c: 36, f: 4.2, unitScaled: false, label: 'oats' },
+    { keywords: ['cornflakes', 'cereal'], cals: 145, p: 3, c: 32, f: 0.5, unitScaled: false, label: 'cereal' },
     { keywords: ['banana'], cals: 105, p: 1.3, c: 27, f: 0.4, unitScaled: true, label: 'banana' },
-    { keywords: ['apple', 'orange', 'fruit'], cals: 95, p: 0.5, c: 25, f: 0.3, unitScaled: true, label: 'fruit' },
+    { keywords: ['apple', 'orange', 'mango', 'pear', 'guava', 'fruit'], cals: 95, p: 0.7, c: 24, f: 0.3, unitScaled: true, label: 'fruit' },
+    { keywords: ['filter coffee', 'coffee', 'chai', 'tea'], cals: 85, p: 2.5, c: 11, f: 3.2, unitScaled: true, label: 'chai/coffee' },
+    { keywords: ['lassi'], cals: 210, p: 7, c: 31, f: 6.5, unitScaled: true, label: 'lassi' },
     { keywords: ['milk', 'shake', 'smoothie'], cals: 165, p: 8.2, c: 13, f: 8.0, unitScaled: false, label: 'milk' },
     { keywords: ['whey', 'protein scoop', 'protein shake'], cals: 130, p: 24, c: 3, f: 1.5, unitScaled: true, label: 'whey' },
-    { keywords: ['peanut butter', 'peanuts', 'almonds', 'nuts'], cals: 190, p: 7.5, c: 7, f: 16, unitScaled: false, label: 'nuts/peanut butter' },
+    { keywords: ['peanut butter'], cals: 188, p: 8, c: 6, f: 16, unitScaled: true, label: 'peanut butter' },
+    { keywords: ['peanuts', 'almonds', 'walnuts', 'cashews', 'nuts', 'chia', 'seeds'], cals: 175, p: 6, c: 6, f: 15, unitScaled: false, label: 'nuts/seeds' },
     { keywords: ['masala dosa'], cals: 280, p: 6.2, c: 42, f: 9.5, unitScaled: true, label: 'masala dosa' },
-    { keywords: ['dosa', 'idli', 'uttapam'], cals: 140, p: 3.8, c: 26, f: 2.2, unitScaled: true, label: 'dosa/idli' },
+    { keywords: ['dosa', 'idli', 'uttapam', 'vada'], cals: 135, p: 3.8, c: 24, f: 2.6, unitScaled: true, label: 'dosa/idli' },
     { keywords: ['chutney'], cals: 90, p: 1.8, c: 5.5, f: 7.2, unitScaled: false, label: 'chutney' },
-    { keywords: ['poha', 'upma'], cals: 230, p: 5.2, c: 40, f: 5.5, unitScaled: false, label: 'poha/upma' },
-    { keywords: ['curd', 'yogurt', 'dahi', 'buttermilk'], cals: 110, p: 6.5, c: 8, f: 5.0, unitScaled: false, label: 'curd' },
-    { keywords: ['bread', 'toast', 'sandwich'], cals: 140, p: 4.5, c: 25, f: 2.5, unitScaled: true, label: 'bread' },
-    { keywords: ['salad', 'sprouts', 'chana'], cals: 160, p: 9.5, c: 24, f: 2.5, unitScaled: false, label: 'sprouts/salad' },
-    { keywords: ['samosa'], cals: 260, p: 4.5, c: 32, f: 13, unitScaled: true, label: 'samosa' },
+    { keywords: ['poha', 'upma', 'pongal'], cals: 240, p: 5.5, c: 41, f: 6.0, unitScaled: false, label: 'poha/upma' },
+    { keywords: ['curd', 'yogurt', 'dahi', 'buttermilk', 'raita'], cals: 110, p: 6.5, c: 8, f: 5.0, unitScaled: false, label: 'curd' },
+    { keywords: ['sandwich'], cals: 270, p: 10, c: 34, f: 10, unitScaled: true, label: 'sandwich' },
+    { keywords: ['bread', 'toast', 'pav'], cals: 85, p: 2.8, c: 16, f: 1.1, unitScaled: true, label: 'bread' },
+    { keywords: ['salad', 'sprouts', 'chana', 'chickpeas'], cals: 160, p: 9.5, c: 24, f: 2.5, unitScaled: false, label: 'sprouts/salad' },
+    { keywords: ['samosa', 'kachori', 'pakora'], cals: 260, p: 4.5, c: 32, f: 13, unitScaled: true, label: 'samosa/snack' },
+    { keywords: ['momos', 'dumplings'], cals: 260, p: 10, c: 36, f: 8, unitScaled: false, label: 'momos' },
     { keywords: ['maggi', 'noodles', 'pasta'], cals: 310, p: 7.5, c: 46, f: 11, unitScaled: false, label: 'noodles/pasta' },
+    { keywords: ['shawarma', 'roll', 'kathi roll', 'wrap'], cals: 390, p: 20, c: 40, f: 16, unitScaled: true, label: 'roll/wrap' },
     { keywords: ['burger', 'pizza'], cals: 360, p: 14, c: 42, f: 15, unitScaled: true, label: 'burger/pizza' },
+    { keywords: ['chocolate', 'gulab jamun', 'sweet', 'ice cream'], cals: 190, p: 3, c: 26, f: 8.5, unitScaled: true, label: 'sweet/dessert' },
   ];
 
+  // Convert spoken number words into digits so "two eggs and one banana" scales properly
+  const wordNumbers: Record<string, string> = {
+    half: '0.5',
+    one: '1',
+    a: '1',
+    an: '1',
+    two: '2',
+    three: '3',
+    four: '4',
+    five: '5',
+    six: '6',
+    seven: '7',
+    eight: '8',
+    nine: '9',
+    ten: '10',
+  };
+  const normalizedForNumbers = lower.replace(
+    /\b(half|one|two|three|four|five|six|seven|eight|nine|ten)\b/g,
+    (m) => wordNumbers[m] || m
+  );
+
   // Split multi-item meal descriptions by common connectors so each item gets its own quantity
-  const segments = lower.split(/\s*(?:,|&|\band\b|\bwith\b|\+)\s*/i).filter(Boolean);
+  const segments = normalizedForNumbers
+    .split(/\s*(?:,|&|\band\b|\bwith\b|\bplus\b|\+)\s*/i)
+    .filter(Boolean);
 
   let totalCals = 0;
   let totalP = 0;
@@ -480,23 +524,40 @@ export function estimateFoodMacros(foodInput: string): {
   const matchedLabels: string[] = [];
 
   for (const seg of segments) {
-    const segNumMatch = seg.match(/(\d+(?:\.\d+)?)\s*(g|gm|grams|ml)?/);
-    const segQty = segNumMatch ? Math.min(1000, Math.max(0.5, parseFloat(segNumMatch[1]))) : 1;
-    const isGrams = Boolean(segNumMatch && segNumMatch[2]);
+    const segNumMatch = seg.match(
+      /(\d+(?:\.\d+)?)\s*(g|gm|grams|ml|kg|cup|cups|bowl|bowls|katori|plate|plates|tbsp|tablespoon|tablespoons|tsp|scoop|scoops|slice|slices|piece|pieces|glass|glasses)?/
+    );
+    const rawQty = segNumMatch ? parseFloat(segNumMatch[1]) : 1;
+    const unit = segNumMatch?.[2] || '';
+    const isGramsOrMl = unit === 'g' || unit === 'gm' || unit === 'grams' || unit === 'ml';
+    const isKg = unit === 'kg';
 
     for (const item of catalog) {
       if (item.keywords.some((kw) => seg.includes(kw))) {
-        // Avoid double counting egg white as egg or masala dosa as dosa
-        if (item.label === 'egg' && seg.includes('egg white')) continue;
+        // Avoid double counting more specific compound dishes
+        if (item.label === 'egg' && (seg.includes('egg white') || seg.includes('egg bhurji'))) continue;
         if (item.label === 'dosa/idli' && seg.includes('masala dosa')) continue;
+        if (item.label === 'paneer' && (seg.includes('paneer tikka') || seg.includes('paneer bhurji') || seg.includes('kadai paneer') || seg.includes('palak paneer'))) continue;
+        if (item.label === 'chicken' && (seg.includes('butter chicken') || seg.includes('chicken curry'))) continue;
+        if (item.label === 'rice' && seg.includes('fried rice')) continue;
+        if (item.label === 'paratha' && (seg.includes('aloo paratha') || seg.includes('gobi paratha') || seg.includes('paneer paratha'))) continue;
+        if (item.label === 'dal/legumes' && seg.includes('dal makhani')) continue;
 
         let scale = 1;
-        if (isGrams || segQty >= 25) {
-          scale = segQty / 100;
+        if (isKg) {
+          scale = Math.min(20, rawQty * 10);
+        } else if (isGramsOrMl || rawQty >= 25) {
+          scale = Math.min(15, rawQty / 100);
+        } else if (unit === 'tbsp' || unit === 'tablespoon' || unit === 'tablespoons') {
+          scale = Math.min(8, rawQty * 0.5);
+        } else if (unit === 'tsp') {
+          scale = Math.min(8, rawQty * 0.2);
+        } else if (unit === 'plate' || unit === 'plates') {
+          scale = Math.min(6, rawQty * 1.3);
         } else if (item.unitScaled) {
-          scale = Math.min(20, segQty);
+          scale = Math.min(20, rawQty);
         } else {
-          scale = Math.min(6, segQty);
+          scale = Math.min(6, rawQty);
         }
 
         totalCals += item.cals * scale;
@@ -510,7 +571,7 @@ export function estimateFoodMacros(foodInput: string): {
   }
 
   if (matchedLabels.length === 0) {
-    const numMatch = lower.match(/(\d+(?:\.\d+)?)/);
+    const numMatch = normalizedForNumbers.match(/(\d+(?:\.\d+)?)/);
     const qty = numMatch ? Math.min(6, Math.max(1, parseFloat(numMatch[1]))) : 1;
     totalCals = 250 * qty;
     totalP = 10 * qty;
@@ -535,10 +596,10 @@ export function estimateFoodMacros(foodInput: string): {
  * System prompt for real-time AI food macro & calorie calculation.
  */
 export function buildFoodNutritionPrompt(): string {
-  return `You are a precision sports nutritionist and calorie/macro calculator AI.
-Given any meal or food description (including Indian dishes, homemade meals, restaurant items, or packaged snacks with quantities like "2 masala dosas", "150g paneer", "3 boiled egg whites and 1 banana"), calculate the accurate total Calories (kcal), Protein (g), Carbs (g), and Fat (g).
-Respond ONLY with a valid JSON object (no markdown fences, no extra commentary) in this exact format:
-{"name":"<clean capitalized food name>","calories":<integer>,"protein":<integer>,"carbs":<integer>,"fat":<integer>,"breakdown":"<short 1-line item-by-item breakdown>"}`;
+  return `You are a precision sports nutritionist and real-time calorie/macro calculator AI.
+Given any spoken or typed meal description (Indian home meals, restaurant food, snacks, drinks, weights like "150g chicken", bowls, plates, spoons, or casual speech like "I had two masala dosas and filter coffee"), accurately compute the total Calories (kcal), Protein (g), Carbs (g), and Fat (g) using realistic USDA / IFCT Indian nutrition values.
+Respond ONLY with a valid JSON object (no markdown fences, no extra text) in this exact schema:
+{"name":"<clean capitalized meal name>","calories":<integer>,"protein":<integer>,"carbs":<integer>,"fat":<integer>,"breakdown":"<short 1-line item-by-item calories & macros breakdown>"}`;
 }
 
 /**
@@ -546,7 +607,8 @@ Respond ONLY with a valid JSON object (no markdown fences, no extra commentary) 
  */
 export function parseAiFoodNutrition(
   rawReply: string,
-  fallbackInput: string
+  fallbackInput: string,
+  isLiveModel = true
 ): {
   name: string;
   calories: number;
@@ -588,7 +650,7 @@ export function parseAiFoodNutrition(
       carbs: Math.max(0, Math.round(carbs)),
       fat: Math.max(0, Math.round(fat)),
       breakdown: String(parsed.breakdown || '').trim() || 'AI nutrition analysis',
-      aiAnalyzed: true,
+      aiAnalyzed: Boolean(isLiveModel),
     };
   } catch {
     return { ...fallback, aiAnalyzed: false };

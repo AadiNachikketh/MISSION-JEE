@@ -12,6 +12,8 @@ import {
   Activity,
   Sparkles,
   Loader2,
+  Mic,
+  MicOff,
 } from 'lucide-react';
 import {
   BodyGoalType,
@@ -133,7 +135,10 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
     aiAnalyzed: boolean;
   } | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceNotice, setVoiceNotice] = useState('');
   const previewReqIdRef = useRef(0);
+  const recognitionRef = useRef<any>(null);
   const [workoutWarning, setWorkoutWarning] = useState('');
   const [completedDrills, setCompletedDrills] = useState<Record<number, boolean>>(
     {}
@@ -176,10 +181,89 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
         },
       ],
     });
-    return parseAiFoodNutrition(res.reply, query);
+    return parseAiFoodNutrition(res.reply, query, !res.demoMode);
   };
 
-  // Real-time debounced AI nutrition preview as the user types what they ate
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
+    };
+  }, []);
+
+  const handleToggleVoiceFood = () => {
+    if (isListening && recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // Ignore stop errors
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRec =
+      typeof window !== 'undefined'
+        ? (window as any).SpeechRecognition ||
+          (window as any).webkitSpeechRecognition
+        : null;
+
+    if (!SpeechRec) {
+      setVoiceNotice(
+        'Voice mic is not supported in this browser—type your meal above and AI will calculate it live.'
+      );
+      return;
+    }
+
+    setVoiceNotice('');
+    try {
+      const recognition = new SpeechRec();
+      recognition.lang = 'en-IN';
+      recognition.interimResults = true;
+      recognition.continuous = false;
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((r: any) => r[0]?.transcript || '')
+          .join(' ')
+          .trim();
+        if (transcript) {
+          setFoodText(transcript);
+        }
+      };
+      recognition.onerror = (event: any) => {
+        setIsListening(false);
+        if (event?.error === 'not-allowed') {
+          setVoiceNotice(
+            'Microphone access blocked—allow mic permission or type your food above.'
+          );
+        } else {
+          setVoiceNotice(
+            'Could not hear clearly—try speaking again or type your meal above.'
+          );
+        }
+      };
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch {
+      setIsListening(false);
+      setVoiceNotice(
+        'Could not start voice input—type your meal above for live AI macro calculation.'
+      );
+    }
+  };
+
+  // Real-time debounced AI nutrition preview as the user speaks or types what they ate
   useEffect(() => {
     const trimmed = foodText.trim();
     if (trimmed.length < 3) {
@@ -203,7 +287,7 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
           setIsPreviewLoading(false);
         }
       }
-    }, 550);
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [foodText]);
@@ -556,16 +640,48 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
               className="flex gap-2"
             >
               <label htmlFor="food-log-input" className="sr-only">
-                Write the name of the food you ate
+                Say or type the food you ate
               </label>
               <input
                 id="food-log-input"
                 type="text"
                 value={foodText}
-                onChange={(e) => setFoodText(e.target.value)}
-                placeholder="Type any meal (e.g., 2 masala dosas with chutney, 150g chicken & rice)..."
+                onChange={(e) => {
+                  setFoodText(e.target.value);
+                  if (voiceNotice) setVoiceNotice('');
+                }}
+                placeholder={
+                  isListening
+                    ? 'Listening... speak your meal now (e.g., 2 masala dosas and coffee)'
+                    : 'Say or type any meal (e.g., 2 masala dosas with chutney, 150g chicken & rice)...'
+                }
                 className="flex-1 h-11 px-4 rounded-xl bg-[#0A0E1F] border border-[#2A3362] focus:border-[#FFB020] focus:outline-none text-xs sm:text-sm text-white placeholder-[#64748B]"
               />
+              <button
+                type="button"
+                onClick={handleToggleVoiceFood}
+                data-testid="voice-food-btn"
+                aria-label={isListening ? 'Stop voice food input' : 'Speak food name'}
+                aria-pressed={isListening}
+                title={isListening ? 'Stop listening' : 'Speak what you ate'}
+                className={`min-h-[44px] px-3.5 rounded-xl border font-display font-bold text-xs flex items-center gap-1.5 cursor-pointer shrink-0 transition-all ${
+                  isListening
+                    ? 'bg-[#ef4444]/20 border-[#ef4444] text-[#fca5a5] animate-pulse'
+                    : 'bg-[#131938] hover:bg-[#1d2552] border-[#2A3362] text-[#22D3EE]'
+                }`}
+              >
+                {isListening ? (
+                  <>
+                    <MicOff className="w-4 h-4" />
+                    <span className="hidden sm:inline">Listening...</span>
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-4 h-4" />
+                    <span className="hidden sm:inline">Speak</span>
+                  </>
+                )}
+              </button>
               <button
                 type="submit"
                 disabled={isAnalyzingFood || !foodText.trim()}
@@ -586,11 +702,15 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
               </button>
             </form>
 
-            {/* Real-Time AI Nutrition Preview as user types */}
+            {voiceNotice && (
+              <p className="text-[11px] text-[#FFB020] px-1">{voiceNotice}</p>
+            )}
+
+            {/* Real-Time AI Nutrition Preview as user speaks or types */}
             {(isPreviewLoading || liveFoodPreview) && foodText.trim().length >= 3 && (
               <div
                 data-testid="live-ai-food-preview"
-                className="p-3 rounded-2xl bg-[#0A0E1F]/90 border border-[#FFB020]/45 space-y-1.5"
+                className="p-3.5 rounded-2xl bg-[#0A0E1F]/90 border border-[#FFB020]/45 space-y-2.5"
               >
                 {isPreviewLoading ? (
                   <div className="flex items-center gap-2 text-xs text-[#FFB020]">
@@ -602,25 +722,40 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
                     <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                       <span className="font-display font-semibold text-white flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-[#FFB020]" />
-                        <span>AI Live Nutrition Estimate: {liveFoodPreview.name}</span>
+                        <span>{liveFoodPreview.name}</span>
                       </span>
-                      <div className="font-mono-num flex flex-wrap gap-2.5 text-[11px]">
-                        <span className="text-[#FFB020] font-bold">
+                      <span className="text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#22D3EE]/15 text-[#22D3EE] border border-[#22D3EE]/30">
+                        {liveFoodPreview.aiAnalyzed ? 'Live AI Verified' : 'Smart Estimate'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 font-mono-num text-center">
+                      <div className="p-2 rounded-xl bg-[#131938]/90 border border-[#2A3362]">
+                        <div className="text-[10px] text-[#94A3B8]">Calories</div>
+                        <div className="text-xs sm:text-sm font-bold text-[#FFB020]">
                           {liveFoodPreview.calories} kcal
-                        </span>
-                        <span className="text-[#22D3EE] font-semibold">
-                          Protein: {liveFoodPreview.protein}g
-                        </span>
-                        <span className="text-[#CBD5E1]">
-                          Carbs: {liveFoodPreview.carbs}g
-                        </span>
-                        <span className="text-[#F472B6]">
-                          Fat: {liveFoodPreview.fat}g
-                        </span>
+                        </div>
+                      </div>
+                      <div className="p-2 rounded-xl bg-[#131938]/90 border border-[#2A3362]">
+                        <div className="text-[10px] text-[#94A3B8]">Protein</div>
+                        <div className="text-xs sm:text-sm font-bold text-[#22D3EE]">
+                          {liveFoodPreview.protein}g
+                        </div>
+                      </div>
+                      <div className="p-2 rounded-xl bg-[#131938]/90 border border-[#2A3362]">
+                        <div className="text-[10px] text-[#94A3B8]">Carbs</div>
+                        <div className="text-xs sm:text-sm font-bold text-[#dee1fa]">
+                          {liveFoodPreview.carbs}g
+                        </div>
+                      </div>
+                      <div className="p-2 rounded-xl bg-[#131938]/90 border border-[#2A3362]">
+                        <div className="text-[10px] text-[#94A3B8]">Fats</div>
+                        <div className="text-xs sm:text-sm font-bold text-[#F472B6]">
+                          {liveFoodPreview.fat}g
+                        </div>
                       </div>
                     </div>
                     {liveFoodPreview.breakdown && (
-                      <p className="text-[11px] text-[#94A3B8]">
+                      <p className="text-[11px] text-[#94A3B8] leading-relaxed">
                         {liveFoodPreview.breakdown}
                       </p>
                     )}
@@ -648,7 +783,7 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
             <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
               {todayFoods.length === 0 ? (
                 <div className="p-4 rounded-2xl bg-[#0A0E1F]/60 border border-[#2A3362]/70 text-xs text-[#94A3B8] text-center">
-                  No food logged yet today. Type any dish or meal above—our real-time AI will calculate its exact calories, protein, carbs, and fat!
+                  No food logged yet today. Speak or type any dish above—our real-time AI calculates its exact calories, protein, carbs, and fats instantly!
                 </div>
               ) : (
                 todayFoods.map((item) => (
@@ -676,10 +811,10 @@ export const WorkoutTab: React.FC<WorkoutTabProps> = ({
                           Protein: {item.protein}g
                         </span>
                         <span>Carbs: {item.carbs}g</span>
-                        <span>Fat: {item.fat}g</span>
+                        <span className="text-[#F472B6]">Fat: {item.fat}g</span>
                       </div>
                       {item.breakdown && (
-                        <p className="text-[11px] text-[#64748B] mt-0.5 truncate">
+                        <p className="text-[11px] text-[#94A3B8] mt-1 leading-relaxed">
                           {item.breakdown}
                         </p>
                       )}

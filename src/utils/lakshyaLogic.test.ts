@@ -112,15 +112,27 @@ test('calculateBmiAndMacros and estimateFoodMacros compute BMI, daily macros, an
   assert.ok(eggFood.calories >= 240 && eggFood.calories <= 280);
   assert.ok(eggFood.protein >= 13);
 
+  const spokenFood = estimateFoodMacros('I had two boiled eggs and one banana');
+  assert.equal(spokenFood.name, 'two boiled eggs and one banana');
+  assert.equal(spokenFood.calories, eggFood.calories);
+
   const aiParsed = parseAiFoodNutrition(
     '```json\n{"name":"Masala Dosa & Sambar","calories":410,"protein":11,"carbs":62,"fat":12,"breakdown":"1 masala dosa + 1 bowl sambar"}\n```',
-    'masala dosa with sambar'
+    'masala dosa with sambar',
+    true
   );
   assert.equal(aiParsed.aiAnalyzed, true);
   assert.equal(aiParsed.calories, 410);
   assert.equal(aiParsed.protein, 11);
   assert.equal(aiParsed.carbs, 62);
   assert.equal(aiParsed.fat, 12);
+
+  const offlineParsed = parseAiFoodNutrition(
+    '{"name":"Masala Dosa","calories":280,"protein":6,"carbs":42,"fat":10,"breakdown":"est"}',
+    'masala dosa',
+    false
+  );
+  assert.equal(offlineParsed.aiAnalyzed, false);
 });
 
 test('canUnlockStage enforces completing all Foundation tasks before unlocking Practice', () => {
